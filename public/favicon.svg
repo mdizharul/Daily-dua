@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <circle cx="32" cy="32" r="32" fill="#0d1f10"/>
+  <!-- Crescent moon -->
+  <path d="M38 13a19 19 0 1 0 0 38 15 15 0 1 1 0-38z" fill="#c9a84c"/>
+  <!-- Star -->
+  <polygon points="45,17 46.4,21.3 51,21.3 47.3,23.9 48.7,28.2 45,25.6 41.3,28.2 42.7,23.9 39,21.3 43.6,21.3" fill="#c9a84c"/>
+  <!-- Tasbih dots -->
+  <circle cx="21" cy="51" r="1.4" fill="rgba(201,168,76,0.55)"/>
+  <circle cx="25.5" cy="53" r="1.4" fill="rgba(201,168,76,0.55)"/>
+  <circle cx="30" cy="54" r="1.4" fill="rgba(201,168,76,0.55)"/>
+  <circle cx="34.5" cy="53" r="1.4" fill="rgba(201,168,76,0.55)"/>
+  <circle cx="39" cy="51" r="1.4" fill="rgba(201,168,76,0.55)"/>
+</svg>
