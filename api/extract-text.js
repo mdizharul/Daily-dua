@@ -8,23 +8,23 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "server_error", message: "Gemini API key is not configured on the server. Contact the app owner." });
   }
 
-  const { base64, mediaType } = req.body || {};
-  if (!base64) {
-    return res.status(400).json({ error: "bad_request", message: "Missing base64 image data." });
+  const { text } = req.body || {};
+  if (!text || !text.trim()) {
+    return res.status(400).json({ error: "bad_request", message: "Missing dua text." });
   }
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
-  const prompt = `You are an Islamic scholar and Arabic linguist. Analyze this image carefully.
+  const prompt = `You are an Islamic scholar and Arabic linguist. The user has provided the following text which is an Islamic dua or supplication:
 
-STEP 1 — VALIDATION: Does this image contain an Islamic dua, Quranic verse, or supplication text in Arabic?
-- If NO (e.g. it is a selfie, landscape, food photo, meme, screenshot of a chat, or any image without Arabic dua text): return ONLY this JSON: {"error": "not_a_dua", "message": "This image does not contain a dua or Arabic supplication. Please upload a screenshot of an Islamic dua."}
-- If YES: proceed to Step 2.
+"""
+${text.trim()}
+"""
 
-STEP 2 — EXTRACTION: Return ONLY a JSON object with these exact fields:
+Analyze this text carefully and return ONLY a JSON object with these exact fields:
 - "title": short descriptive title in English (e.g. "Dua Before Sleeping")
 - "category": classify the dua into ONE of these categories: "daily", "protection", "health", "rizq", "sleep", "travel", "meals", "morning", "evening", "general"
-- "arabic": full Arabic text exactly as shown, with all diacritics (tashkeel) preserved. Use \\n to separate lines.
+- "arabic": the Arabic text cleaned up with all diacritics (tashkeel) preserved. Use \\n to separate lines. If the input is already Arabic, use it as-is with corrections if needed.
 - "transliteration": COMPLETE Roman Urdu transliteration of EVERY Arabic word. Same number of \\n breaks as arabic. Never skip or truncate any word. Use phonetics like aa, ee, oo, kh, gh.
 - "translation": Roman Urdu meaning. Same number of \\n breaks as arabic.
 
@@ -32,8 +32,8 @@ STRICT RULES:
 - Return ONLY valid JSON — no markdown, no backticks, no explanation
 - transliteration must cover every single Arabic word — NEVER cut short
 - Translation MUST be in Roman Urdu (not English, not Urdu script)
-- If screenshot already has transliteration/translation, verify and correct it
-- category MUST be one of: daily, protection, health, rizq, sleep, travel, meals, morning, evening, general`;
+- category MUST be one of: daily, protection, health, rizq, sleep, travel, meals, morning, evening, general
+- If the text is not Arabic or not a dua, return: {"error": "not_a_dua", "message": "This text does not appear to be an Islamic dua or Arabic supplication."}`;
 
   let geminiRes;
   try {
@@ -42,10 +42,7 @@ STRICT RULES:
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         contents: [{
-          parts: [
-            { inline_data: { mime_type: mediaType || "image/jpeg", data: base64 } },
-            { text: prompt },
-          ],
+          parts: [{ text: prompt }],
         }],
       }),
     });

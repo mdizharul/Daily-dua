@@ -13,3 +13,7 @@ export function loadStreak() {
 export function saveStreak(v) { try { localStorage.setItem("daily-dua-streak", JSON.stringify(v)); } catch {} }
 export function loadFontSize() { try { const s = localStorage.getItem("arabic-font-size"); return s ? parseFloat(s) : 1.2; } catch { return 1.2; } }
 export function saveFontSize(v) { try { localStorage.setItem("arabic-font-size", String(v)); } catch {} }
+export function loadThemeMode() { try { const s = localStorage.getItem("theme-mode"); return ["dark","light","paper"].includes(s) ? s : "dark"; } catch { return "dark"; } }
+export function saveThemeMode(v) { try { localStorage.setItem("theme-mode", v); } catch {} }
+export function loadScriptMode() { try { const s = localStorage.getItem("script-mode"); return ["indopak","uthmani"].includes(s) ? s : "indopak"; } catch { return "indopak"; } }
+export function saveScriptMode(v) { try { localStorage.setItem("script-mode", v); } catch {} }

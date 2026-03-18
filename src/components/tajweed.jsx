@@ -1,17 +1,18 @@
-// Indo-Pak standard color scheme used in Tajweed Quran prints & Muslim Pro
-const TAJWEED_COLORS = {
-  qalqalah: "#9b59b6", // Purple  — ق ط ب ج د  (echo/bounce letters)
-  ghunna:   "#27ae60", // Green   — نّ مّ       (nasalization with shadda)
-  tafkheem: "#e67e22", // Orange  — ص ض ظ خ غ  (heavy/emphatic letters)
-  ra:       "#c0392b", // Red     — ر            (ra, mostly heavy)
-  madd:     "#2980b9", // Blue    — ا و ي ى      (long vowel / prolongation)
+// Tajweed coloring — subtle approach
+// Only highlight the most important tajweed rules with UNDERLINES, not full text recoloring
+// This preserves readability while marking key pronunciation rules
+
+const TAJWEED_RULES = {
+  ghunna:   { color: "#27ae60", label: "Ghunna" },    // nasalization — most important to mark
+  qalqalah: { color: "#9b59b6", label: "Qalqalah" },  // echo/bounce
+  madd:     { color: "#2980b9", label: "Madd" },       // prolongation
 };
+
 const QALQALAH  = new Set([...'قطبجد']);
-const GHUNNA    = new Set([...'نم']);
-const TAFKHEEM  = new Set([...'صضظخغ']);
+const GHUNNA_LETTERS = new Set([...'نم']);
 const MADD      = new Set(['\u0627','\u0648','\u064a','\u0649']); // ا و ي ى
 
-// Split Arabic string into {seg, base} objects — base letter + its diacritics as one unit
+// Split Arabic string into {seg, base} objects
 function segmentArabic(text) {
   const DIACRITIC = /[\u064b-\u065f\u0610-\u061a\u0670]/;
   const out = [];
@@ -26,36 +27,52 @@ function segmentArabic(text) {
   return out;
 }
 
-function tajweedColor(segments, idx) {
+function tajweedRule(segments, idx) {
   const { seg, base } = segments[idx];
   const hasShadda = seg.includes('\u0651'); // ّ
-  const hasVowel  = /[\u064b-\u0650]/.test(seg.slice(1)); // short vowel on base letter
 
-  if (QALQALAH.has(base))                        return TAJWEED_COLORS.qalqalah;
-  if (GHUNNA.has(base) && hasShadda)              return TAJWEED_COLORS.ghunna;
-  if (TAFKHEEM.has(base))                         return TAJWEED_COLORS.tafkheem;
-  if (base === 'ر')                               return TAJWEED_COLORS.ra;
-  // Madd: ا ى always; و ي only when acting as long vowel (no short-vowel diacritic on them)
-  if (MADD.has(base) && (base === '\u0627' || base === '\u0649' || !hasVowel))
-                                                  return TAJWEED_COLORS.madd;
+  // Only color letters with shadda for ghunna (نّ مّ) — most audible rule
+  if (GHUNNA_LETTERS.has(base) && hasShadda) return "ghunna";
+  // Qalqalah only when letter has sukoon (no vowel after it) — the echo only happens at stops
+  if (QALQALAH.has(base)) {
+    const hasVowel = /[\u064b-\u0650]/.test(seg.slice(1));
+    if (!hasVowel && !hasShadda) return "qalqalah";
+  }
+  // Madd — only alif (always madd) and waw/ya without vowel
+  if (MADD.has(base)) {
+    const hasVowel = /[\u064b-\u0650]/.test(seg.slice(1));
+    if (base === '\u0627' || base === '\u0649' || !hasVowel) return "madd";
+  }
   return null;
 }
 
 export const TAJWEED_LEGEND = [
-  { label: "Qalqalah",  color: TAJWEED_COLORS.qalqalah, desc: "ق ط ب ج د" },
-  { label: "Ghunna",    color: TAJWEED_COLORS.ghunna,   desc: "نّ مّ" },
-  { label: "Tafkheem",  color: TAJWEED_COLORS.tafkheem, desc: "ص ض ظ خ غ" },
-  { label: "Ra",        color: TAJWEED_COLORS.ra,        desc: "ر" },
-  { label: "Madd",      color: TAJWEED_COLORS.madd,      desc: "ا و ي" },
+  { label: "Ghunna",    color: TAJWEED_RULES.ghunna.color,   desc: "نّ مّ" },
+  { label: "Qalqalah",  color: TAJWEED_RULES.qalqalah.color, desc: "ق ط ب ج د" },
+  { label: "Madd",      color: TAJWEED_RULES.madd.color,      desc: "ا و ي" },
 ];
 
 export const TajweedText = ({ text, defaultColor }) => {
   const segments = segmentArabic(text);
   return (
     <span>
-      {segments.map(({ seg, base }, i) => {
-        const color = tajweedColor(segments, i);
-        return <span key={i} style={{ color: color || defaultColor }}>{seg}</span>;
+      {segments.map(({ seg }, i) => {
+        const rule = tajweedRule(segments, i);
+        if (rule) {
+          const c = TAJWEED_RULES[rule].color;
+          return (
+            <span key={i} style={{
+              color: defaultColor,
+              textDecoration: "underline",
+              textDecorationColor: c,
+              textDecorationThickness: "2px",
+              textUnderlineOffset: "4px",
+            }}>
+              {seg}
+            </span>
+          );
+        }
+        return <span key={i} style={{ color: defaultColor }}>{seg}</span>;
       })}
     </span>
   );
