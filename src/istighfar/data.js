@@ -67,13 +67,14 @@ export const TRACKERS = {
         label: "Hasbunallahu wa ni'mal wakeel",
         hint: "Surah Aal-e-Imran 3:173",
         arabic: "حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ",
-        meaning: "Hasbunallahu wa ni'mal wakeel · Allah is enough for us",
+        // Hindi meaning as given in docs/design/hasbunallah-reference.webp
+        meaning: "अल्लाह हमारे लिए काफी है, और वही सबसे अच्छा कारसाज़ (मामलों का सुलझाने वाला) है।",
       },
       full: {
         label: "…ni'mal mawla wa ni'man naseer",
         hint: "With “the best Protector, the best Helper”",
         arabic: "حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ\nنِعْمَ الْمَوْلَىٰ وَنِعْمَ النَّصِيرُ",
-        meaning: "Allah is enough for us · the best Protector, the best Helper",
+        meaning: "अल्लाह हमारे लिए काफी है, और वही सबसे अच्छा कारसाज़ है — वही सबसे अच्छा मौला और सबसे अच्छा मददगार है।",
       },
     },
   },
