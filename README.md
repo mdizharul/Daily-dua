@@ -4,11 +4,12 @@ Screenshot duas from Instagram & YouTube (or paste the Arabic text) → AI (Goog
 Gemini) extracts the Arabic, Roman-Urdu transliteration and translation → track
 your memorization.
 
-**Features:** screenshot & paste-text extraction with auto-category · New →
-Learning → Memorized tracking with a memorized "Vault" · flashcard Review mode ·
-recite counter & daily streak · search and category filters · share a dua as an
-image · Dark / Light / Paper themes · tajweed markers · Arabic font size ·
-JSON backup export & import.
+**Features:** screenshot & paste-text extraction with auto-category · Library
+with To learn / Learnt, search and category filters · a page per dua (listen,
+recited-today counter, mark learnt, share as image) · Memorize mode: Read, Fill
+blanks, From memory — 5 correct recalls marks a dua learnt · daily streak ·
+Dark / Light / Paper themes · tajweed markers · Arabic script & size · JSON
+backup export & import. Design: `docs/design/daily-dua-mockup.html`.
 
 **Istighfar tracker** (bottom tab): tap-to-count with daily goal ring, Undo /
 +33 / +100, Pocket mode (dark, screen stays awake, hold to exit), streak,
@@ -50,20 +51,21 @@ environment variable `GEMINI_API_KEY` in the site settings.
 │   ├── App.jsx                App state, header, screen switching, dua actions
 │   ├── index.css              Global base styles
 │   ├── constants.js           Statuses, categories, sample duas
-│   ├── views/                 Full screens
-│   │   ├── HomeView.jsx       Stats, search, filters, dua list
+│   ├── library/               Library, dua page, Memorize (mockup style, see theme.js)
+│   │   ├── LibraryView.jsx    Home: To learn / Learnt, search, categories, list
+│   │   ├── DuaDetailView.jsx  One dua: card, listen, recited today, learnt, share
+│   │   ├── MemorizeView.jsx   Read / Fill blanks / From memory practice
+│   │   └── duaUtils.js        Dates (incl. Hijri), recall target, helpers
+│   ├── views/                 Classic themed screens
 │   │   ├── AddEditView.jsx    Add/edit: screenshot, paste text, or manual
-│   │   ├── ReviewView.jsx     Flashcard review
 │   │   └── SettingsView.jsx   Script, tajweed, font size, backup/import/clear
 │   ├── components/
-│   │   ├── DuaCard.jsx        One dua card
-│   │   ├── BottomNav.jsx      Duas · Istighfar · History tabs
+│   │   ├── BottomNav.jsx      Library · Memorize · Istighfar tabs
 │   │   ├── TajweedText.jsx    Arabic text with tajweed underlines
-│   │   ├── icons.jsx          Star, background pattern, spinner
-│   │   └── islamic.jsx        Decorative patterns, seal, divider, frame
+│   │   └── icons.jsx          Star, spinner
 │   ├── hooks/useTheme.js      Dark / Light / Paper colour themes
 │   ├── istighfar/             Istighfar tracker (own green style, see theme.js)
-│   │   ├── IstighfarSection.jsx  Switches Counter / History / Goal & settings
+│   │   ├── IstighfarSection.jsx  Counter, with History and Goal & settings
 │   │   ├── CounterScreen.jsx, PocketMode.jsx, HistoryScreen.jsx, GoalSettingsScreen.jsx
 │   │   ├── useIstighfar.js    State, counting, undo, vibration
 │   │   └── data.js            Storage, day rollover, sessions, stats
@@ -76,5 +78,5 @@ environment variable `GEMINI_API_KEY` in the site settings.
 │   └── netlify.js             Adapter for Netlify functions
 ├── api/                       Vercel functions  → server/gemini.js
 ├── netlify/functions/         Netlify functions → server/gemini.js
-└── docs/design/               Design mockups (Istighfar tracker)
+└── docs/design/               Design mockups (Daily Dua, Istighfar tracker)
 ```

@@ -1,21 +1,21 @@
 import { C } from "../istighfar/theme";
-import { BookIcon, ChartIcon, ClockIcon } from "../istighfar/icons";
+import { BeadsIcon, LibraryIcon, MemorizeIcon } from "../library/icons";
 
 const ITEMS = [
-  { id: "duas", label: "Duas", Icon: BookIcon },
-  { id: "istighfar", label: "Istighfar", Icon: ClockIcon },
-  { id: "history", label: "History", Icon: ChartIcon },
+  { id: "library", label: "Library", Icon: LibraryIcon },
+  { id: "memorize", label: "Memorize", Icon: MemorizeIcon },
+  { id: "istighfar", label: "Istighfar", Icon: BeadsIcon },
 ];
 
 /**
- * App-wide bottom navigation. On the Duas tab it follows the Daily Dua theme (T);
- * on the Istighfar tabs it uses the tracker's own green-on-white style.
+ * App-wide bottom navigation. Library and Memorize use the library palette (L);
+ * the Istighfar tab uses the tracker's own green-on-white style.
  */
-export default function BottomNav({ section, onChange, T }) {
-  const tracker = section !== "duas";
-  const colors = tracker
-    ? { bg: C.bg, border: C.border, active: C.accent, idle: C.muted }
-    : { bg: T.navBg, border: T.cardBorder, active: T.gold, idle: T.goldFaint };
+export default function BottomNav({ section, onChange, L }) {
+  const colors =
+    section === "istighfar"
+      ? { bg: C.bg, border: C.border, active: C.accent, idle: C.muted }
+      : { bg: L.bg, border: L.border, active: L.text, idle: L.muted };
 
   return (
     <nav

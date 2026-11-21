@@ -1,30 +1,36 @@
 import { useState, useEffect, useRef } from "react";
-import { loadDuas, saveDuas, loadTajweedMode, loadFontSize, loadStreak, saveStreak, loadScriptMode, saveScriptMode } from "./services/storage";
+import { loadDuas, saveDuas, loadTajweedMode, loadFontSize, saveFontSize, loadStreak, saveStreak, loadScriptMode, saveScriptMode } from "./services/storage";
 import hashImage from "./utils/hashImage";
 import { extractDuaFromImage, extractDuaFromText } from "./services/extractApi";
 import { SAMPLE_DUAS, ARABIC_SCRIPTS } from "./constants";
 import { Spinner, StarIcon } from "./components/icons";
 import useTheme from "./hooks/useTheme";
-import HomeView from "./views/HomeView";
 import SettingsView from "./views/SettingsView";
 import AddEditView from "./views/AddEditView";
-import ReviewView from "./views/ReviewView";
 import BottomNav from "./components/BottomNav";
 import IstighfarSection from "./istighfar/IstighfarSection";
 import useIstighfar from "./istighfar/useIstighfar";
+import LibraryView from "./library/LibraryView";
+import DuaDetailView from "./library/DuaDetailView";
+import MemorizeView from "./library/MemorizeView";
+import { getLibraryTheme } from "./library/theme";
+import { RECALL_TARGET, todayKey } from "./library/duaUtils";
+import shareAsImage from "./utils/shareAsImage";
 
-const SECTION_KEY = "app-section"; // "duas" | "istighfar" | "history"
+const SECTION_KEY = "app-section"; // "library" | "memorize" | "istighfar"
 function loadSection() {
   try {
     const s = localStorage.getItem(SECTION_KEY);
-    return ["duas", "istighfar", "history"].includes(s) ? s : "duas";
+    if (s === "duas") return "library"; // older name
+    if (s === "history") return "istighfar"; // History now lives inside the tracker
+    return ["library", "memorize", "istighfar"].includes(s) ? s : "library";
   } catch {
-    return "duas";
+    return "library";
   }
 }
 
 export default function App() {
-  const { mode, cycleMode, T, icon: modeIcon, isPaper, isLight, isDark } = useTheme();
+  const { mode, cycleMode, T, icon: modeIcon, isLight, isDark } = useTheme();
   const istighfar = useIstighfar();
   const [section, setSectionState] = useState(loadSection);
   const setSection = (s) => {
@@ -37,18 +43,13 @@ export default function App() {
   const [loading, setLoading]     = useState(true);
   const [view, setView]           = useState("home");
   const [editIdx, setEditIdx]     = useState(null);
-  const [filter, setFilter]       = useState("all");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [archiveView, setArchiveView] = useState(false);
+  const [libFilters, setLibFilters] = useState({ tab: "learn", category: "all", search: "", searchOpen: false });
+  const [selectedId, setSelectedId] = useState(null); // dua shown on the dua page
+  const [memorize, setMemorize] = useState({ focusId: null, fromDua: false, session: 0 });
   const [scriptMode, setScriptModeState] = useState("indopak");
   const [tajweedMode, setTajweedMode] = useState(false);
   const [streak, setStreak] = useState({ count: 0, lastDate: "" });
   const [arabicFontSize, setArabicFontSize] = useState(1.2);
-  const [reviewMode, setReviewMode] = useState(false);
-  const [reviewQueue, setReviewQueue] = useState([]);
-  const [reviewIdx, setReviewIdx] = useState(0);
-  const [reviewRevealed, setReviewRevealed] = useState(false);
 
   const [title, setTitle]         = useState("");
   const [arabic, setArabic]       = useState("");
@@ -183,7 +184,9 @@ export default function App() {
     };
     if (editIdx !== null) { const u = [...duas]; u[editIdx] = obj; setDuas(u); }
     else setDuas([obj, ...duas]);
-    resetForm(); setEditIdx(null); setView("home");
+    const wasEditing = editIdx !== null;
+    resetForm(); setEditIdx(null);
+    if (wasEditing) { setSelectedId(obj.id); setView("dua"); } else setView("home");
   };
 
   const handleEdit = (idx) => {
@@ -194,62 +197,138 @@ export default function App() {
     setEditIdx(idx); setView("edit");
   };
 
-  /* ── Handle Recite with streak ── */
-  const handleRecite = (ri) => {
-    const u = [...duas];
-    u[ri] = { ...u[ri], reciteCount: (u[ri].reciteCount || 0) + 1 };
-    setDuas(u);
+  /* ── Dua actions (by id) ── */
+  const updateDua = (id, patch) => setDuas((list) => list.map((d) => (d.id === id ? { ...d, ...patch } : d)));
+
+  const handleRecite = (id) => {
+    const day = todayKey();
+    setDuas((list) => list.map((d) => (d.id === id
+      ? { ...d, reciteCount: (d.reciteCount || 0) + 1, recites: { ...d.recites, [day]: (d.recites?.[day] || 0) + 1 } }
+      : d)));
     if (navigator.vibrate) navigator.vibrate(40);
-    const today = new Date().toISOString().slice(0, 10);
-    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const yesterday = todayKey(new Date(Date.now() - 86400000));
     setStreak(prev => {
       let next;
-      if (prev.lastDate === today) {
-        next = prev;
-      } else if (prev.lastDate === yesterday) {
-        next = { count: prev.count + 1, lastDate: today };
-      } else {
-        next = { count: 1, lastDate: today };
-      }
+      if (prev.lastDate === day) next = prev;
+      else if (prev.lastDate === yesterday) next = { count: prev.count + 1, lastDate: day };
+      else next = { count: 1, lastDate: day };
       saveStreak(next);
       return next;
     });
   };
 
-  /* ── Start Review ── */
-  const startReview = () => {
-    const queue = [...liveDuas].sort(() => Math.random() - 0.5);
-    setReviewQueue(queue);
-    setReviewIdx(0);
-    setReviewRevealed(false);
-    setReviewMode(true);
+  const openDua = (id) => { setSelectedId(id); setView("dua"); window.scrollTo(0, 0); };
+  const backToLibrary = () => { setView("home"); setSelectedId(null); };
+
+  const deleteDua = (id) => {
+    if (!confirm("Delete this dua? This cannot be undone.")) return;
+    setDuas((list) => list.filter((d) => d.id !== id));
+    backToLibrary();
   };
 
-  const liveDuas    = duas.filter(d => d.status !== "memorized");
-  const archivedDuas = duas.filter(d => d.status === "memorized");
-  const sourceDuas   = archiveView ? archivedDuas : liveDuas;
-  const filteredDuas = sourceDuas
-    .filter(d => filter === "all" || d.status === filter)
-    .filter(d => categoryFilter === "all" || (d.category || "general") === categoryFilter)
-    .filter(d => !searchQuery || [d.title, d.transliteration, d.translation].some(f => (f || "").toLowerCase().includes(searchQuery.toLowerCase())));
-  const counts = { all: liveDuas.length, new: liveDuas.filter((d) => d.status === "new").length, learning: liveDuas.filter((d) => d.status === "learning").length, memorized: archivedDuas.length };
+  const toggleLearnt = (dua) =>
+    updateDua(dua.id, dua.status === "memorized" ? { status: "learning", recall: 0 } : { status: "memorized", recall: RECALL_TARGET });
 
-  if (loading) return (
+  /* Memorize: "I said it right" moves a dua toward learnt; "Need practice" steps back one. */
+  const memorizeResult = (id, correct) => setDuas((list) => list.map((d) => {
+    if (d.id !== id) return d;
+    const recall = correct ? Math.min((d.recall || 0) + 1, RECALL_TARGET) : Math.max((d.recall || 0) - 1, 0);
+    const status = correct && (recall >= RECALL_TARGET || d.status === "memorized") ? "memorized" : "learning";
+    return { ...d, recall, status };
+  }));
+
+  const startMemorize = (focusId = null, fromDua = false) => {
+    setMemorize((m) => ({ focusId, fromDua, session: m.session + 1 }));
+    setSection("memorize");
+  };
+
+  const changeFontSize = (v) => { setArabicFontSize(v); saveFontSize(v); };
+
+  const startEdit = (id) => handleEdit(duas.findIndex((d) => d.id === id));
+
+    if (loading) return (
     <div style={{ minHeight: "100vh", background: T.appBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <style>{`@keyframes spin { from { transform:rotate(0deg) } to { transform:rotate(360deg) } }`}</style>
       <Spinner size={28} />
     </div>
   );
 
-  const nav = <BottomNav section={section} onChange={setSection} T={T} />;
+  const L = getLibraryTheme(mode);
+  const goSection = (s) => {
+    if (s === "memorize" && section !== "memorize") { startMemorize(); return; }
+    if (s === "library" && section === "library") backToLibrary();
+    setSection(s);
+  };
+  const nav = <BottomNav section={section} onChange={goSection} L={L} />;
 
   /* ══ ISTIGHFAR TRACKER ══ */
-  if (section !== "duas") return (
+  if (section === "istighfar") return (
     <>
-      <IstighfarSection tab={section} tracker={istighfar} />
+      <IstighfarSection tracker={istighfar} />
       {nav}
     </>
   );
+
+  /* ══ MEMORIZE ══ */
+  if (section === "memorize") return (
+    <>
+      <MemorizeView
+        key={memorize.session}
+        L={L}
+        duas={duas}
+        focusId={memorize.focusId}
+        onResult={memorizeResult}
+        onBack={memorize.fromDua ? () => setSection("library") : null}
+        onLibrary={() => { backToLibrary(); setSection("library"); }}
+      />
+      {nav}
+    </>
+  );
+
+  /* ══ LIBRARY ══ */
+  const selected = duas.find((d) => d.id === selectedId);
+  if (view === "dua" && selected) return (
+    <>
+      <DuaDetailView
+        L={L}
+        dua={selected}
+        tajweed={tajweedMode}
+        fontSize={arabicFontSize}
+        onFontSize={changeFontSize}
+        onBack={backToLibrary}
+        onEdit={() => startEdit(selected.id)}
+        onDelete={() => deleteDua(selected.id)}
+        onRecite={() => handleRecite(selected.id)}
+        onToggleLearnt={() => toggleLearnt(selected)}
+        onMemorize={() => startMemorize(selected.id, true)}
+        onShare={() => shareAsImage(selected, mode === "paper")}
+      />
+      {nav}
+    </>
+  );
+
+  if (view === "home" || view === "dua") return (
+    <>
+      <LibraryView
+        L={L}
+        duas={duas}
+        filters={libFilters}
+        setFilters={setLibFilters}
+        streak={streak.count}
+        onOpen={openDua}
+        onAdd={() => { resetForm(); setEditIdx(null); setView("add"); }}
+        onSettings={() => setView("settings")}
+      />
+      {nav}
+    </>
+  );
+
+  /* ══ ADD / EDIT / SETTINGS (classic themed screens) ══ */
+  const editingId = editIdx !== null ? duas[editIdx]?.id : null;
+  const leaveForm = () => {
+    resetForm(); setEditIdx(null);
+    if (editingId != null) { setSelectedId(editingId); setView("dua"); } else setView("home");
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: T.appBg, color: T.appColor, fontFamily: "var(--font-ui)", paddingBottom: "var(--nav-h)" }}>
@@ -260,18 +339,11 @@ export default function App() {
 
       {/* ══ HEADER ══ */}
       <div style={{ textAlign: "center", padding: "2rem 1.5rem 1rem", position: "relative" }}>
-        {/* Top-left: Back / Vault button */}
-        {view === "home" ? (
-          <button onClick={() => { setArchiveView(!archiveView); setFilter("all"); setCategoryFilter("all"); setSearchQuery(""); }}
-            style={{ position: "absolute", top: "1.25rem", left: "1.2rem", background: archiveView ? (isDark ? "rgba(100,210,120,0.15)" : isPaper ? "rgba(139,94,32,0.15)" : "rgba(26,107,60,0.1)") : "none", border: archiveView ? `1px solid ${isDark ? "rgba(100,210,120,0.3)" : isPaper ? "rgba(139,94,32,0.3)" : "rgba(26,107,60,0.25)"}` : "none", borderRadius: "20px", padding: "0.2rem 0.7rem", color: archiveView ? (isDark ? "#7ec97e" : T.heading) : T.goldFaint, cursor: "pointer", fontSize: "0.72rem", fontFamily: "var(--font-ui)", fontWeight: 600, letterSpacing: "1px" }}>
-            {archiveView ? "← Live" : `✓ Vault (${archivedDuas.length})`}
-          </button>
-        ) : (
-          <button onClick={() => { resetForm(); setEditIdx(null); setView("home"); setReviewMode(false); }}
-            style={{ position: "absolute", top: "1.25rem", left: "1.2rem", background: "none", border: "none", color: T.gold, cursor: "pointer", fontSize: "0.9rem", fontFamily: "'Cormorant Garamond', serif", fontWeight: 600, padding: "0.2rem 0.4rem" }}>
-            ← Back
-          </button>
-        )}
+        {/* Top-left: Back */}
+        <button onClick={leaveForm}
+          style={{ position: "absolute", top: "1.25rem", left: "1.2rem", background: "none", border: "none", color: T.gold, cursor: "pointer", fontSize: "0.9rem", fontFamily: "'Cormorant Garamond', serif", fontWeight: 600, padding: "0.2rem 0.4rem" }}>
+          ← Back
+        </button>
 
         {/* Top-right: Theme toggle + Settings */}
         <div style={{ position: "absolute", top: "1.2rem", right: "1.2rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -280,7 +352,7 @@ export default function App() {
             style={{ background: isDark ? "rgba(201,168,76,0.08)" : isLight ? "rgba(26,107,60,0.08)" : "rgba(139,94,32,0.08)", border: `1px solid ${isDark ? "rgba(201,168,76,0.15)" : isLight ? "rgba(26,107,60,0.15)" : "rgba(139,94,32,0.15)"}`, borderRadius: "20px", padding: "0.15rem 0.55rem", color: T.gold, cursor: "pointer", fontSize: "0.85rem", fontFamily: "var(--font-ui)", display: "flex", alignItems: "center", gap: "0.3rem", transition: "all 0.2s" }}>
             <span>{modeIcon}</span>
           </button>
-          <button onClick={() => { setView(view === "settings" ? "home" : "settings"); }}
+          <button aria-label="Settings" onClick={() => { if (view === "settings") leaveForm(); else setView("settings"); }}
             style={{ background: "none", border: "none", color: T.goldFaint, cursor: "pointer", fontSize: "1.3rem" }}>⚙</button>
         </div>
 
@@ -300,8 +372,8 @@ export default function App() {
             DAILY DUA
           </h1>
         </div>
-        <p style={{ fontSize: "0.72rem", color: archiveView ? (isDark ? "#7ec97e" : T.heading) : T.goldFaint, margin: 0, letterSpacing: "3px", textTransform: "uppercase" }}>
-          {archiveView ? "✓  Memorized Vault" : "Screenshot · Extract · Memorize"}
+        <p style={{ fontSize: "0.72rem", color: T.goldFaint, margin: 0, letterSpacing: "3px", textTransform: "uppercase" }}>
+          Screenshot · Extract · Memorize
         </p>
         {streak.count > 0 && (
           <div style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", marginTop: "0.4rem", padding: "0.2rem 0.75rem", background: streak.count >= 7 ? "rgba(255,140,0,0.12)" : (isDark ? "rgba(201,168,76,0.08)" : isLight ? "rgba(26,107,60,0.06)" : "rgba(139,94,32,0.08)"), border: `1px solid ${streak.count >= 7 ? "rgba(255,140,0,0.3)" : T.goldFaint}`, borderRadius: "20px" }}>
@@ -330,51 +402,6 @@ export default function App() {
           />
         )}
 
-        {/* ══ REVIEW MODE ══ */}
-        {view === "home" && reviewMode && (
-          <ReviewView
-            reviewQueue={reviewQueue}
-            reviewIdx={reviewIdx}
-            setReviewIdx={setReviewIdx}
-            reviewRevealed={reviewRevealed}
-            setReviewRevealed={setReviewRevealed}
-            duas={duas}
-            setDuas={setDuas}
-            arabicFontSize={arabicFontSize}
-            setReviewMode={setReviewMode}
-            T={T}
-          />
-        )}
-
-        {/* ══ HOME ══ */}
-        {view === "home" && !reviewMode && (
-          <HomeView
-            duas={duas}
-            setDuas={setDuas}
-            liveDuas={liveDuas}
-            filteredDuas={filteredDuas}
-            archiveView={archiveView}
-            filter={filter}
-            setFilter={setFilter}
-            categoryFilter={categoryFilter}
-            setCategoryFilter={setCategoryFilter}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            counts={counts}
-            tajweedMode={tajweedMode}
-            arabicFontSize={arabicFontSize}
-            streak={streak}
-            startReview={startReview}
-            handleRecite={handleRecite}
-            handleEdit={handleEdit}
-            resetForm={resetForm}
-            setEditIdx={setEditIdx}
-            setView={setView}
-            T={T}
-            themeMode={mode}
-          />
-        )}
-
         {/* ══ ADD / EDIT ══ */}
         {(view === "add" || view === "edit") && (
           <AddEditView
@@ -399,7 +426,7 @@ export default function App() {
             handleScreenshot={handleScreenshot}
             handlePasteExtract={handlePasteExtract}
             handleSave={handleSave}
-            setView={setView}
+            setView={(v) => (v === "home" ? leaveForm() : setView(v))}
             T={T}
             themeMode={mode}
           />

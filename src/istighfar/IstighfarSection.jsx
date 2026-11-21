@@ -6,22 +6,31 @@ import GoalSettingsScreen from "./GoalSettingsScreen";
 import PocketMode from "./PocketMode";
 
 /**
- * The Istighfar tracker. `tab` is "istighfar" (counter) or "history".
+ * The Istighfar tracker: Counter, with History and Goal & settings opened from its header.
  * `tracker` comes from useIstighfar() in App, so counts and undo survive tab switches.
  */
-export default function IstighfarSection({ tab, tracker }) {
-  const [showSettings, setShowSettings] = useState(false);
+export default function IstighfarSection({ tracker }) {
+  const [screen, setScreen] = useState("counter"); // "counter" | "history" | "settings"
   const [pocket, setPocket] = useState(false);
   const exitPocket = useCallback(() => setPocket(false), []);
+  const toCounter = () => setScreen("counter");
 
-  let screen;
-  if (tab === "history") screen = <HistoryScreen tracker={tracker} />;
-  else if (showSettings) screen = <GoalSettingsScreen tracker={tracker} onBack={() => setShowSettings(false)} />;
-  else screen = <CounterScreen tracker={tracker} onOpenSettings={() => setShowSettings(true)} onPocket={() => setPocket(true)} />;
+  let content;
+  if (screen === "history") content = <HistoryScreen tracker={tracker} onBack={toCounter} />;
+  else if (screen === "settings") content = <GoalSettingsScreen tracker={tracker} onBack={toCounter} />;
+  else
+    content = (
+      <CounterScreen
+        tracker={tracker}
+        onOpenSettings={() => setScreen("settings")}
+        onOpenHistory={() => setScreen("history")}
+        onPocket={() => setPocket(true)}
+      />
+    );
 
   return (
     <div style={{ minHeight: "100svh", background: C.bg, color: C.text, fontFamily: FONT, paddingBottom: "var(--nav-h)" }}>
-      {screen}
+      {content}
       {pocket && (
         <PocketMode
           count={tracker.today.count}

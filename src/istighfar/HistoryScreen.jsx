@@ -1,9 +1,10 @@
-import { C, FONT_NUM, card } from "./theme";
+import { C, FONT_NUM, card, iconButton } from "./theme";
+import { BackIcon } from "./icons";
 import { formatGoal, formatNumber, formatShort, formatTime, sessionLabel, weekdayShort } from "./data";
 
 const BAR_MAX = 140; // px height of a bar that reached the goal
 
-export default function HistoryScreen({ tracker }) {
+export default function HistoryScreen({ tracker, onBack }) {
   const { settings, today, todayKey, streak, week } = tracker;
   const { goal } = settings;
 
@@ -19,9 +20,14 @@ export default function HistoryScreen({ tracker }) {
 
   return (
     <div style={{ minHeight: "calc(100svh - var(--nav-h))", display: "flex", flexDirection: "column", gap: "16px", padding: "20px", maxWidth: "480px", margin: "0 auto", textAlign: "left" }}>
-      <header style={{ display: "flex", flexDirection: "column", gap: "2px", paddingTop: "8px" }}>
-        <span style={{ fontSize: "13px", color: C.muted, fontWeight: 500 }}>This week</span>
-        <h1 style={{ margin: 0, fontFamily: FONT_NUM, fontSize: "28px", fontWeight: 700, letterSpacing: "-0.5px", color: C.text }}>History</h1>
+      <header style={{ display: "flex", alignItems: "center", gap: "12px", paddingTop: "8px" }}>
+        <button type="button" aria-label="Back to counter" onClick={onBack} style={iconButton}>
+          <BackIcon />
+        </button>
+        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+          <span style={{ fontSize: "13px", color: C.muted, fontWeight: 500 }}>This week</span>
+          <h1 style={{ margin: 0, fontFamily: FONT_NUM, fontSize: "28px", fontWeight: 700, letterSpacing: "-0.5px", color: C.text }}>History</h1>
+        </div>
       </header>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "10px" }}>

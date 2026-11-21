@@ -1,11 +1,11 @@
 import { C, FONT, FONT_NUM, iconButton, pillButton } from "./theme";
 import { DHIKR, formatNumber, headerDate } from "./data";
-import { ChevronDownIcon, FlameIcon, MoonIcon, SlidersIcon, TapIcon, UndoIcon } from "./icons";
+import { ChartIcon, ChevronDownIcon, FlameIcon, MoonIcon, SlidersIcon, TapIcon, UndoIcon } from "./icons";
 
 const RING_R = 112;
 const RING_LEN = 2 * Math.PI * RING_R;
 
-export default function CounterScreen({ tracker, onOpenSettings, onPocket }) {
+export default function CounterScreen({ tracker, onOpenSettings, onOpenHistory, onPocket }) {
   const { settings, today, now, streak, add, undo, canUndo } = tracker;
   const { goal } = settings;
   const count = today.count;
@@ -53,6 +53,9 @@ export default function CounterScreen({ tracker, onOpenSettings, onPocket }) {
               <FlameIcon stroke={C.streakIcon} /> {streak} {streak === 1 ? "day" : "days"}
             </span>
           )}
+          <button type="button" aria-label="History" onClick={onOpenHistory} style={iconButton}>
+            <ChartIcon size={20} />
+          </button>
           <button type="button" aria-label="Goal and settings" onClick={onOpenSettings} style={iconButton}>
             <SlidersIcon />
           </button>
