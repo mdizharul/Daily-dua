@@ -66,7 +66,13 @@ export default async function shareAsImage(dua, paper) {
   canvas.toBlob(async (blob) => {
     const file = new File([blob], `${dua.title.replace(/\s+/g, "-")}.png`, { type: "image/png" });
     if (navigator.share && navigator.canShare?.({ files: [file] })) {
-      try { await navigator.share({ files: [file], title: dua.title }); return; } catch {}
+      try {
+        await navigator.share({ files: [file], title: dua.title });
+        return;
+      } catch (err) {
+        if (err?.name === "AbortError") return; // user closed the share sheet — don't download
+        // any other share failure: fall through to a plain download
+      }
     }
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = file.name; a.click();

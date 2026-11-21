@@ -3,8 +3,8 @@ import shareAsImage from "../utils/shareAsImage";
 import { CATEGORIES, STATUS_MAP, CATEGORY_MAP } from "../constants";
 
 export default function HomeView({
-  duas, setDuas, liveDuas, archivedDuas, filteredDuas,
-  archiveView, setArchiveView,
+  duas, setDuas, liveDuas, filteredDuas,
+  archiveView,
   filter, setFilter, categoryFilter, setCategoryFilter,
   searchQuery, setSearchQuery,
   counts,

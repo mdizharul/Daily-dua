@@ -3,14 +3,14 @@ import { CATEGORIES, CATEGORY_MAP } from "../constants";
 import { Spinner } from "../components/icons";
 
 export default function AddEditView({
-  duas, setDuas, editIdx, setEditIdx,
+  editIdx,
   title, setTitle, arabic, setArabic, translit, setTranslit, translation, setTrans,
   selectedCategory, setSelectedCategory,
   addMode, setAddMode,
   screenshot, setScreenshot,
   extracting, extractError,
   fileRef, handleScreenshot, handlePasteExtract, handleSave,
-  resetForm, setView, T, themeMode,
+  setView, T, themeMode,
 }) {
   const [pasteText, setPasteText] = useState("");
 

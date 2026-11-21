@@ -27,3 +27,8 @@ dist-ssr
 .netlify
 .env
 .env.*
+!.env.example
+
+# Local-only folders
+.claude
+_original-netlify-build

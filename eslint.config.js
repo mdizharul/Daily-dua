@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', '_original-netlify-build']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [
@@ -25,5 +25,10 @@ export default defineConfig([
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
+  },
+  {
+    // Server-side code (Vercel/Netlify functions, dev middleware) runs in Node
+    files: ['api/**/*.js', 'netlify/**/*.js', 'server/**/*.js', 'vite.config.js'],
+    languageOptions: { globals: globals.node },
   },
 ])

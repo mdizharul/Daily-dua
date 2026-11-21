@@ -1,18 +1,17 @@
 import { useState, useEffect, useRef } from "react";
-import { loadDuas, saveDuas, loadTajweedMode, loadFontSize, loadStreak, saveStreak, loadScriptMode, saveScriptMode } from "./storage";
+import { loadDuas, saveDuas, loadTajweedMode, loadFontSize, loadStreak, saveStreak, loadScriptMode, saveScriptMode } from "./services/storage";
 import hashImage from "./utils/hashImage";
-import extractDuaFromImage from "./utils/extractDua";
-import extractDuaFromText from "./utils/extractDuaFromText";
-import { SAMPLE_DUAS, CATEGORIES } from "./constants";
+import { extractDuaFromImage, extractDuaFromText } from "./services/extractApi";
+import { SAMPLE_DUAS } from "./constants";
 import { Spinner, StarIcon } from "./components/icons";
-import useTheme, { MODE_ICONS, MODES } from "./hooks/useTheme";
+import useTheme from "./hooks/useTheme";
 import HomeView from "./views/HomeView";
 import SettingsView from "./views/SettingsView";
 import AddEditView from "./views/AddEditView";
 import ReviewView from "./views/ReviewView";
 
 export default function App() {
-  const { mode, setMode, cycleMode, T, icon: modeIcon, isPaper, isLight, isDark } = useTheme();
+  const { mode, cycleMode, T, icon: modeIcon, isPaper, isLight, isDark } = useTheme();
 
   const [duas, setDuas]           = useState([]);
   const [loading, setLoading]     = useState(true);
@@ -264,7 +263,7 @@ export default function App() {
             <path d="M38 13a19 19 0 1 0 0 38 15 15 0 1 1 0-38z" fill={isLight ? "#1a6b3c" : T.gold} />
             <polygon points="45,17 46.4,21.3 51,21.3 47.3,23.9 48.7,28.2 45,25.6 41.3,28.2 42.7,23.9 39,21.3 43.6,21.3" fill={T.gold} />
           </svg>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.8rem", fontWeight: 300, margin: 0, letterSpacing: "3px", ...(isDark ? { background: "linear-gradient(90deg, #c9a84c 40%, #f0dfa0 50%, #c9a84c 60%)", backgroundSize: "200% auto", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 4s linear infinite" } : { color: T.heading }) }}>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.8rem", fontWeight: 300, margin: 0, letterSpacing: "3px", ...(isDark ? { backgroundImage: "linear-gradient(90deg, #c9a84c 40%, #f0dfa0 50%, #c9a84c 60%)", backgroundSize: "200% auto", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 4s linear infinite" } : { color: T.heading }) }}>
             DAILY DUA
           </h1>
         </div>
@@ -286,15 +285,12 @@ export default function App() {
           <SettingsView
             duas={duas}
             setDuas={setDuas}
-            themeMode={mode}
-            setThemeMode={setMode}
             tajweedMode={tajweedMode}
             setTajweedMode={setTajweedMode}
             arabicFontSize={arabicFontSize}
             setArabicFontSize={setArabicFontSize}
             scriptMode={scriptMode}
             setScriptMode={setScriptMode}
-            setView={setView}
             importRef={importRef}
             handleImport={handleImport}
             T={T}
@@ -323,10 +319,8 @@ export default function App() {
             duas={duas}
             setDuas={setDuas}
             liveDuas={liveDuas}
-            archivedDuas={archivedDuas}
             filteredDuas={filteredDuas}
             archiveView={archiveView}
-            setArchiveView={setArchiveView}
             filter={filter}
             setFilter={setFilter}
             categoryFilter={categoryFilter}
@@ -351,10 +345,7 @@ export default function App() {
         {/* ══ ADD / EDIT ══ */}
         {(view === "add" || view === "edit") && (
           <AddEditView
-            duas={duas}
-            setDuas={setDuas}
             editIdx={editIdx}
-            setEditIdx={setEditIdx}
             title={title}
             setTitle={setTitle}
             arabic={arabic}
@@ -375,7 +366,6 @@ export default function App() {
             handleScreenshot={handleScreenshot}
             handlePasteExtract={handlePasteExtract}
             handleSave={handleSave}
-            resetForm={resetForm}
             setView={setView}
             T={T}
             themeMode={mode}

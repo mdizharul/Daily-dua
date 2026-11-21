@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
-import { loadThemeMode, saveThemeMode } from "../storage";
+import { useState, useMemo } from "react";
+import { loadThemeMode, saveThemeMode } from "../services/storage";
 
 const DARK = {
   mode: "dark",

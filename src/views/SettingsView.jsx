@@ -1,9 +1,9 @@
-import { saveTajweedMode, saveFontSize, saveDuas, saveScriptMode } from "../storage";
+import { saveTajweedMode, saveFontSize, saveDuas } from "../services/storage";
 
 export default function SettingsView({
-  duas, setDuas, themeMode, setThemeMode, tajweedMode, setTajweedMode,
+  duas, setDuas, tajweedMode, setTajweedMode,
   arabicFontSize, setArabicFontSize, scriptMode, setScriptMode,
-  setView, importRef, handleImport, T,
+  importRef, handleImport, T,
 }) {
   const btnStyle = { background: T.btnBg, border: `1px solid ${T.btnBorder}`, borderRadius: "8px", padding: "0.22rem 0.55rem", color: T.btnText, cursor: "pointer", fontSize: "0.7rem", fontFamily: "'Cormorant Garamond', serif" };
 

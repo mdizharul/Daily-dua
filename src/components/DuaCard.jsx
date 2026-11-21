@@ -2,7 +2,8 @@ import { useState, useRef } from "react";
 import { STATUS_MAP, CATEGORY_MAP } from "../constants";
 import { GeoBg, StarIcon } from "./icons";
 import { IslamicPattern, BadgeSeal, GoldDivider, MihrabFrame } from "./islamic";
-import { TajweedText, TAJWEED_LEGEND } from "./tajweed";
+import TajweedText from "./TajweedText";
+import { TAJWEED_LEGEND } from "../utils/tajweed";
 
 const DuaCard = ({ dua, onStatusChange, onDelete, onEdit, onRecite, onShare, T, themeMode, tajweed, fontSize = 1.2 }) => {
   const [expanded, setExpanded] = useState(true);
