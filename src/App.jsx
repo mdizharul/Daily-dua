@@ -341,19 +341,19 @@ export default function App() {
       <div style={{ textAlign: "center", padding: "2rem 1.5rem 1rem", position: "relative" }}>
         {/* Top-left: Back */}
         <button onClick={leaveForm}
-          style={{ position: "absolute", top: "1.25rem", left: "1.2rem", background: "none", border: "none", color: T.gold, cursor: "pointer", fontSize: "0.9rem", fontFamily: "'Cormorant Garamond', serif", fontWeight: 600, padding: "0.2rem 0.4rem" }}>
+          style={{ position: "absolute", top: "0.75rem", left: "0.6rem", minHeight: "44px", background: "none", border: "none", color: T.gold, cursor: "pointer", fontSize: "0.9rem", fontFamily: "'Cormorant Garamond', serif", fontWeight: 600, padding: "0 0.6rem" }}>
           ← Back
         </button>
 
         {/* Top-right: Theme toggle + Settings */}
-        <div style={{ position: "absolute", top: "1.2rem", right: "1.2rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <div style={{ position: "absolute", top: "0.75rem", right: "0.6rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <button onClick={cycleMode}
             title={`Theme: ${mode}`}
-            style={{ background: isDark ? "rgba(201,168,76,0.08)" : isLight ? "rgba(26,107,60,0.08)" : "rgba(139,94,32,0.08)", border: `1px solid ${isDark ? "rgba(201,168,76,0.15)" : isLight ? "rgba(26,107,60,0.15)" : "rgba(139,94,32,0.15)"}`, borderRadius: "20px", padding: "0.15rem 0.55rem", color: T.gold, cursor: "pointer", fontSize: "0.85rem", fontFamily: "var(--font-ui)", display: "flex", alignItems: "center", gap: "0.3rem", transition: "all 0.2s" }}>
+            style={{ background: isDark ? "rgba(201,168,76,0.08)" : isLight ? "rgba(26,107,60,0.08)" : "rgba(139,94,32,0.08)", border: `1px solid ${isDark ? "rgba(201,168,76,0.15)" : isLight ? "rgba(26,107,60,0.15)" : "rgba(139,94,32,0.15)"}`, borderRadius: "20px", padding: "0 0.55rem", minWidth: "44px", minHeight: "40px", justifyContent: "center", color: T.gold, cursor: "pointer", fontSize: "0.85rem", fontFamily: "var(--font-ui)", display: "flex", alignItems: "center", gap: "0.3rem", transition: "all 0.2s" }}>
             <span>{modeIcon}</span>
           </button>
           <button aria-label="Settings" onClick={() => { if (view === "settings") leaveForm(); else setView("settings"); }}
-            style={{ background: "none", border: "none", color: T.goldFaint, cursor: "pointer", fontSize: "1.3rem" }}>⚙</button>
+            style={{ background: "none", border: "none", color: T.goldFaint, cursor: "pointer", fontSize: "1.3rem", width: "44px", height: "44px" }}>⚙</button>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.8rem", marginBottom: "0.3rem" }}>

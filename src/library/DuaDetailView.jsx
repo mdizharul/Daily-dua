@@ -117,24 +117,27 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
         </article>
 
         {/* What to show + listen + text size */}
-        <div role="group" aria-label="Show on card" style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+        <div role="group" aria-label="Show on card" style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
           <button type="button" aria-pressed={showTranslit} onClick={() => setShowTranslit(!showTranslit)} style={chip(L, showTranslit)}>
             Transliteration
           </button>
           <button type="button" aria-pressed={showMeaning} onClick={() => setShowMeaning(!showMeaning)} style={chip(L, showMeaning)}>
             Matlab
           </button>
-          <button type="button" aria-label={speaking ? "Stop" : "Listen"} onClick={speak} style={{ ...chip(L, speaking), marginLeft: "auto", width: "40px", padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <SpeakerIcon playing={speaking} />
-          </button>
-          <button
-            type="button"
-            aria-label="Change Arabic text size"
-            onClick={() => onFontSize(SIZES[(sizeIdx + 1) % SIZES.length].value)}
-            style={{ ...chip(L, false), minWidth: "52px", fontWeight: 700 }}
-          >
-            Aa {SIZES[sizeIdx].label}
-          </button>
+          {/* Listen + size stay together; on narrow phones they wrap as a pair */}
+          <span style={{ display: "flex", gap: "8px", marginLeft: "auto" }}>
+            <button type="button" aria-label={speaking ? "Stop" : "Listen"} onClick={speak} style={{ ...chip(L, speaking), width: "40px", padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <SpeakerIcon playing={speaking} />
+            </button>
+            <button
+              type="button"
+              aria-label="Change Arabic text size"
+              onClick={() => onFontSize(SIZES[(sizeIdx + 1) % SIZES.length].value)}
+              style={{ ...chip(L, false), minWidth: "52px", fontWeight: 700 }}
+            >
+              Aa {SIZES[sizeIdx].label}
+            </button>
+          </span>
         </div>
 
         {/* Recited today */}
@@ -173,10 +176,10 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
         </div>
 
         <div style={{ display: "flex", justifyContent: "center", gap: "24px", paddingTop: "4px" }}>
-          <button type="button" onClick={copy} style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: L.muted, fontSize: "13px", fontWeight: 500, fontFamily: "var(--font-ui)", cursor: "pointer" }}>
+          <button type="button" onClick={copy} style={{ display: "flex", alignItems: "center", gap: "6px", minHeight: "44px", padding: "0 10px", background: "none", border: "none", color: L.muted, fontSize: "13px", fontWeight: 500, fontFamily: "var(--font-ui)", cursor: "pointer" }}>
             <CopyIcon /> {copied ? "Copied" : "Copy text"}
           </button>
-          <button type="button" onClick={onDelete} style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: L.danger, fontSize: "13px", fontWeight: 500, fontFamily: "var(--font-ui)", cursor: "pointer" }}>
+          <button type="button" onClick={onDelete} style={{ display: "flex", alignItems: "center", gap: "6px", minHeight: "44px", padding: "0 10px", background: "none", border: "none", color: L.danger, fontSize: "13px", fontWeight: 500, fontFamily: "var(--font-ui)", cursor: "pointer" }}>
             <TrashIcon /> Delete
           </button>
         </div>
