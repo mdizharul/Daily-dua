@@ -19,7 +19,7 @@ export default function CounterScreen({ tracker, onOpenSettings, onOpenHistory, 
   return (
     <div
       style={{
-        height: "calc(100svh - var(--nav-h))",
+        minHeight: "calc(100svh - var(--nav-h))",
         display: "flex",
         flexDirection: "column",
         gap: "14px",
@@ -120,7 +120,7 @@ export default function CounterScreen({ tracker, onOpenSettings, onOpenHistory, 
         onClick={() => add(1)}
         style={{
           flexGrow: 1,
-          minHeight: 0,
+          flexShrink: 0,
           background: C.card,
           border: `1px solid ${C.border}`,
           borderRadius: "32px",
@@ -128,7 +128,7 @@ export default function CounterScreen({ tracker, onOpenSettings, onOpenHistory, 
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          gap: "16px",
+          gap: "20px",
           cursor: "pointer",
           color: C.text,
           padding: "16px",
@@ -138,7 +138,7 @@ export default function CounterScreen({ tracker, onOpenSettings, onOpenHistory, 
           WebkitTapHighlightColor: "transparent",
         }}
       >
-        <span style={{ position: "relative", width: "min(260px, 34svh)", aspectRatio: "1", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span style={{ position: "relative", width: "min(260px, 100%)", aspectRatio: "1", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <svg viewBox="0 0 260 260" aria-hidden="true" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", transform: "rotate(-90deg)" }}>
             <circle cx="130" cy="130" r={RING_R} fill="none" stroke={C.ring} strokeWidth="16" />
             <circle
@@ -155,7 +155,7 @@ export default function CounterScreen({ tracker, onOpenSettings, onOpenHistory, 
             />
           </svg>
           <span style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
-            <span style={{ fontFamily: FONT_NUM, fontSize: "clamp(40px, 7svh, 56px)", fontWeight: 700, letterSpacing: "-1.5px", lineHeight: 1 }}>
+            <span style={{ fontFamily: FONT_NUM, fontSize: "56px", fontWeight: 700, letterSpacing: "-1.5px", lineHeight: 1 }}>
               {formatNumber(count)}
             </span>
             <span style={{ fontSize: "15px", color: C.muted, fontWeight: 500 }}>of {formatNumber(goal)}</span>
