@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { CATEGORIES, CATEGORY_MAP } from "../constants";
 import { Spinner } from "../components/icons";
 
@@ -13,6 +13,7 @@ export default function AddEditView({
   setView, T, themeMode,
 }) {
   const [pasteText, setPasteText] = useState("");
+  const cameraRef = useRef(null);
 
   const inputStyle = { width: "100%", padding: "0.8rem 1rem", background: T.inputBg, border: `1px solid ${T.inputBorder}`, borderRadius: "12px", color: T.appColor, fontSize: "0.95rem", fontFamily: "var(--font-ui)", outline: "none", resize: "vertical", boxSizing: "border-box" };
   const labelStyle = { display: "block", fontFamily: "var(--font-ui)", fontSize: "0.82rem", fontWeight: 600, color: T.gold, marginBottom: "0.35rem", letterSpacing: "1px", textTransform: "uppercase" };
@@ -41,8 +42,10 @@ export default function AddEditView({
             {/* Screenshot upload */}
             {addMode === "screenshot" && (
               <div style={{ marginBottom: "1.2rem" }}>
-                <label style={labelStyle}>Screenshot (auto-extracts dua)</label>
+                <label style={labelStyle}>Photo or screenshot (auto-extracts dua)</label>
                 <input ref={fileRef} type="file" accept="image/*" onChange={handleScreenshot} style={{ display: "none" }} />
+                {/* capture="environment" opens the back camera directly on phones */}
+                <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handleScreenshot} style={{ display: "none" }} />
 
                 {!screenshot ? (
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", padding: "1.8rem 1rem", background: T.inputBg, border: `1.5px dashed ${T.inputBorder}`, borderRadius: "18px" }}>
@@ -52,10 +55,10 @@ export default function AddEditView({
                       </svg>
                     </div>
                     <p style={{ margin: 0, fontSize: "0.85rem", color: T.goldFaint, textAlign: "center" }}>
-                      Drop your screenshot here<br />
+                      Take a photo of a dua (book, poster, wall) or upload a screenshot<br />
                       <span style={{ fontSize: "0.72rem" }}>AI extracts Arabic, transliteration & translation</span>
                     </p>
-                    <div style={{ display: "flex", gap: "0.6rem" }}>
+                    <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap", justifyContent: "center" }}>
                       <button type="button" onClick={() => setView("home")}
                         style={{ padding: "0.55rem 1.4rem", background: "transparent", border: `1.5px solid ${T.cardBorder}`, borderRadius: "50px", color: T.goldFaint, cursor: "pointer", fontSize: "0.9rem", fontFamily: "'Cormorant Garamond', serif", fontWeight: 600 }}>
                         Cancel
@@ -63,6 +66,10 @@ export default function AddEditView({
                       <button type="button" onClick={() => { if(fileRef.current) { fileRef.current.value = ""; fileRef.current.click(); } }}
                         style={{ padding: "0.55rem 1.6rem", background: T.ctaBg, border: "none", borderRadius: "50px", color: T.ctaColor, cursor: "pointer", fontSize: "0.9rem", fontFamily: "'Cormorant Garamond', serif", fontWeight: 700, boxShadow: T.ctaShadow }}>
                         Upload
+                      </button>
+                      <button type="button" onClick={() => { if (cameraRef.current) { cameraRef.current.value = ""; cameraRef.current.click(); } }}
+                        style={{ padding: "0.55rem 1.4rem", background: T.ctaBg, border: "none", borderRadius: "50px", color: T.ctaColor, cursor: "pointer", fontSize: "0.9rem", fontFamily: "'Cormorant Garamond', serif", fontWeight: 700, boxShadow: T.ctaShadow, minHeight: "40px" }}>
+                        📷 Take photo
                       </button>
                     </div>
                   </div>
@@ -83,7 +90,7 @@ export default function AddEditView({
                   <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.8rem", marginTop: "0.6rem", background: T.inputBg, borderRadius: "10px", border: `1px solid ${T.cardBorder}` }}>
                     <Spinner size={16} inline />
                     <div>
-                      <p style={{ margin: 0, fontSize: "0.85rem", color: T.gold }}>AI is reading your screenshot...</p>
+                      <p style={{ margin: 0, fontSize: "0.85rem", color: T.gold }}>AI is reading your image...</p>
                       <p style={{ margin: "0.1rem 0 0", fontSize: "0.72rem", color: T.goldFaint }}>Extracting Arabic, transliteration & translation</p>
                     </div>
                   </div>

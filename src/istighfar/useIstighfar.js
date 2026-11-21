@@ -36,6 +36,11 @@ export default function useIstighfar() {
   const todayKey = dayKey(now, shared.resetAt);
   const today = getDay(tracker.days, todayKey);
 
+  // Tasbih-style rounds: Reset keeps today's total but starts the big counter at 0.
+  const round = tracker.round?.key === todayKey ? tracker.round : null;
+  const roundBase = Math.min(round?.base || 0, today.count);
+  const roundCount = today.count - roundBase;
+
   // Latest count for haptics, so rapid taps between renders still buzz correctly.
   const countRef = useRef(today.count);
   useEffect(() => {
@@ -58,7 +63,7 @@ export default function useIstighfar() {
 
     const key = dayKey(t, shared.resetAt);
     setNow(t);
-    updateTrackerOf(active, (tr) => ({ ...tr, days: addCount(tr.days, key, amount, t) }));
+    updateTrackerOf(active, (tr) => ({ ...tr, days: addCount(tr.days, key, amount, t, tr.round?.key === key ? tr.round.at : 0) }));
     setUndoStack((s) => [...s.slice(-199), { id: active, key, amount }]);
   };
 
@@ -70,6 +75,16 @@ export default function useIstighfar() {
     vibrate(20);
     setUndoStack((s) => s.filter((_, i) => i !== lastIndex));
     updateTrackerOf(last.id, (tr) => ({ ...tr, days: removeCount(tr.days, last.key, last.amount) }));
+  };
+
+  /** Save the current round (it stays in today's total and History) and start counting from 0. */
+  const reset = () => {
+    if (roundCount === 0) return;
+    vibrate([30, 40, 30]);
+    const saved = roundCount;
+    updateTrackerOf(active, (tr) => ({ ...tr, round: { key: todayKey, base: getDay(tr.days, todayKey).count, at: Date.now(), last: saved } }));
+    // Undoing counts from a finished round would change a saved round, so clear them.
+    setUndoStack((s) => s.filter((u) => u.id !== active));
   };
 
   /** Shared settings: resetAt, reminder, strongBuzzEvery. Goal & dhikr form go to the active dhikr. */
@@ -108,6 +123,10 @@ export default function useIstighfar() {
     add,
     undo,
     canUndo: lastIndex >= 0,
+    roundCount,
+    roundReset: roundBase > 0,
+    lastRound: round?.last || 0,
+    reset,
     streak: streak(tracker.days, todayKey),
     week: weekStats(tracker.days, todayKey, tracker.goal),
   };

@@ -4,7 +4,8 @@
 // {
 //   settings: { resetAt, reminder, strongBuzzEvery, enabled: ["istighfar", ...], active },
 //   trackers: {
-//     istighfar:   { goal, form, days: { "YYYY-MM-DD": { count, sessions: [{ start, end, count }] } } },
+//     istighfar:   { goal, form, days: { "YYYY-MM-DD": { count, sessions: [{ start, end, count }] } },
+//                    round: { key, base, at, last } },   // tasbih-style Reset: today's count at reset
 //     hasbunallah: { goal, form, days: { ... } }
 //   }
 // }
@@ -162,12 +163,15 @@ export const getDay = (days, key) => days[key] || EMPTY_DAY;
 
 // ---------- counting (operate on one tracker's `days`) ----------
 
-/** Adds `amount` on day `key` at time `t`, extending the latest session or starting a new one. */
-export function addCount(days, key, amount, t) {
+/**
+ * Adds `amount` on day `key` at time `t`, extending the latest session or starting a new one.
+ * A session that ended before `splitAfter` (the last Reset) is never extended.
+ */
+export function addCount(days, key, amount, t, splitAfter = 0) {
   const day = getDay(days, key);
   const sessions = [...day.sessions];
   const last = sessions[sessions.length - 1];
-  if (last && t - last.end < SESSION_GAP_MS) {
+  if (last && t - last.end < SESSION_GAP_MS && last.end >= splitAfter) {
     sessions[sessions.length - 1] = { ...last, end: t, count: last.count + amount };
   } else {
     sessions.push({ start: t, end: t, count: amount });

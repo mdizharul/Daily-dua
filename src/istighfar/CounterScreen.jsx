@@ -1,13 +1,13 @@
 import { C, FONT, FONT_NUM, iconButton, pillButton } from "./theme";
 import { formatNumber, headerDate } from "./data";
 import DhikrSwitch from "./DhikrSwitch";
-import { ChartIcon, ChevronDownIcon, FlameIcon, MoonIcon, SlidersIcon, TapIcon, UndoIcon } from "./icons";
+import { ChartIcon, ChevronDownIcon, FlameIcon, MoonIcon, ResetIcon, SlidersIcon, TapIcon, UndoIcon } from "./icons";
 
 const RING_R = 112;
 const RING_LEN = 2 * Math.PI * RING_R;
 
 export default function CounterScreen({ tracker, onOpenSettings, onOpenHistory, onPocket }) {
-  const { settings, today, now, streak, add, undo, canUndo, info, form } = tracker;
+  const { settings, today, now, streak, add, undo, canUndo, info, form, roundCount, roundReset, lastRound, reset } = tracker;
   const { goal } = settings;
   const count = today.count;
   const progress = Math.min(count / goal, 1);
@@ -94,7 +94,7 @@ export default function CounterScreen({ tracker, onOpenSettings, onOpenHistory, 
             style={{
               fontFamily: "var(--arabic-font)",
               fontSize: isLong ? "calc(17px * var(--arabic-scale))" : "calc(24px * var(--arabic-scale))",
-              lineHeight: isLong ? 1.8 : 1.3,
+              lineHeight: isLong ? 1.8 : 1.5,
               whiteSpace: "pre-line",
               maxHeight: isLong ? "24svh" : undefined,
               overflowY: isLong ? "auto" : undefined,
@@ -102,7 +102,7 @@ export default function CounterScreen({ tracker, onOpenSettings, onOpenHistory, 
           >
             {dhikr.arabic}
           </span>
-          <span style={{ fontSize: "13px", color: C.muted }}>{dhikr.meaning}</span>
+          <span style={{ fontSize: "13px", color: C.muted, marginTop: "4px" }}>{dhikr.meaning}</span>
         </span>
         <ChevronDownIcon stroke={C.muted} />
       </button>
@@ -156,21 +156,28 @@ export default function CounterScreen({ tracker, onOpenSettings, onOpenHistory, 
           </svg>
           <span style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
             <span style={{ fontFamily: FONT_NUM, fontSize: "56px", fontWeight: 700, letterSpacing: "-1.5px", lineHeight: 1 }}>
-              {formatNumber(count)}
+              {formatNumber(roundCount)}
             </span>
-            <span style={{ fontSize: "15px", color: C.muted, fontWeight: 500 }}>of {formatNumber(goal)}</span>
+            <span style={{ fontSize: "15px", color: C.muted, fontWeight: 500 }}>
+              {roundReset ? `Today ${formatNumber(count)} of ${formatNumber(goal)}` : `of ${formatNumber(goal)}`}
+            </span>
             <span style={{ marginTop: "8px", fontSize: "13px", fontWeight: 600, color: C.accent, background: C.accentSoft, padding: "4px 10px", borderRadius: "999px" }}>
               {count >= goal ? `Goal reached · ${formatNumber(count - goal)} extra` : `${pct}% · ${formatNumber(goal - count)} left`}
             </span>
           </span>
         </span>
-        <span style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: C.muted, fontWeight: 500 }}>
-          <TapIcon /> Tap anywhere here to count
+        <span style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: C.muted, fontWeight: 500 }}>
+            <TapIcon /> Tap anywhere here to count
+          </span>
+          {lastRound > 0 && (
+            <span style={{ fontSize: "12px", color: C.muted }}>Last round saved: {formatNumber(lastRound)}</span>
+          )}
         </span>
       </button>
 
       {/* Quick actions */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "10px", flexShrink: 0 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: "8px", flexShrink: 0 }}>
         <button
           type="button"
           onClick={undo}
@@ -178,6 +185,15 @@ export default function CounterScreen({ tracker, onOpenSettings, onOpenHistory, 
           style={{ ...pillButton, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2px", fontSize: "12px", fontWeight: 600, opacity: canUndo ? 1 : 0.45, cursor: canUndo ? "pointer" : "default" }}
         >
           <UndoIcon /> Undo
+        </button>
+        <button
+          type="button"
+          onClick={reset}
+          disabled={roundCount === 0}
+          aria-label="Reset: save this round and start from 0"
+          style={{ ...pillButton, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2px", fontSize: "12px", fontWeight: 600, opacity: roundCount ? 1 : 0.45, cursor: roundCount ? "pointer" : "default" }}
+        >
+          <ResetIcon /> Reset
         </button>
         <button type="button" onClick={() => add(33)} style={{ ...pillButton, fontFamily: FONT_NUM, fontSize: "18px", fontWeight: 600 }}>
           +33

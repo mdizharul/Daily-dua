@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { loadDuas, saveDuas, loadTajweedMode, loadFontSize, saveFontSize, loadStreak, saveStreak, loadScriptMode, saveScriptMode } from "./services/storage";
 import hashImage from "./utils/hashImage";
+import prepareImage from "./utils/prepareImage";
 import { extractDuaFromImage, extractDuaFromText } from "./services/extractApi";
 import { SAMPLE_DUAS, ARABIC_SCRIPTS } from "./constants";
 import { Spinner, StarIcon } from "./components/icons";
@@ -117,15 +118,20 @@ export default function App() {
   const handleScreenshot = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      const fullData = ev.target.result;
-      const base64   = fullData.split(",")[1];
+    {
+      // Camera photos are scaled down so the upload stays under the host's size limit.
+      let fullData, base64, mimeType;
+      try {
+        ({ dataUrl: fullData, base64, mimeType } = await prepareImage(file));
+      } catch (err) {
+        setExtractError(err.message || "Could not open this image.");
+        return;
+      }
 
       // Duplicate check
       const hash = hashImage(base64);
       if (processedHashes.current.has(hash)) {
-        setExtractError("You've already uploaded this screenshot. The dua was extracted earlier — check your list or edit it manually.");
+        setExtractError("You've already uploaded this image. The dua was extracted earlier — check your list or edit it manually.");
         return;
       }
 
@@ -134,7 +140,7 @@ export default function App() {
       setExtractError(null);
 
       try {
-        const result = await extractDuaFromImage(base64, file.type || "image/jpeg");
+        const result = await extractDuaFromImage(base64, mimeType);
         processedHashes.current.add(hash);
         setTitle(result.title || "");
         setArabic(result.arabic || "");
@@ -146,8 +152,7 @@ export default function App() {
         setExtractError(err.message || "Could not extract. Fill in manually.");
       }
       setExtracting(false);
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   /* ── Paste text extract ── */

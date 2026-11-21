@@ -88,3 +88,10 @@ export const BookIcon = (p) => (
     <path d="M20 17v4H6.5A2.5 2.5 0 0 1 4 18.5" />
   </Svg>
 );
+
+export const ResetIcon = (p) => (
+  <Svg size={18} {...p}>
+    <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+    <path d="M3 3v5h5" />
+  </Svg>
+);
