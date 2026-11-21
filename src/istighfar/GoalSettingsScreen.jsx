@@ -1,5 +1,6 @@
 import { C, FONT, FONT_NUM, card, iconButton } from "./theme";
-import { BUZZ_OPTIONS, DHIKR, GOALS, FAJR_HOUR, formatGoal, paceText } from "./data";
+import { BUZZ_OPTIONS, FAJR_HOUR, TRACKERS, formatGoal, paceText } from "./data";
+import DhikrSwitch from "./DhikrSwitch";
 import { BackIcon } from "./icons";
 
 const Row = ({ title, hint, last, children, as = "div" }) => {
@@ -26,7 +27,7 @@ const Row = ({ title, hint, last, children, as = "div" }) => {
 };
 
 export default function GoalSettingsScreen({ tracker, onBack }) {
-  const { settings, updateSettings } = tracker;
+  const { settings, updateSettings, info, enabled, setEnabled } = tracker;
 
   return (
     <div style={{ minHeight: "calc(100svh - var(--nav-h))", display: "flex", flexDirection: "column", gap: "16px", padding: "20px", maxWidth: "480px", margin: "0 auto", textAlign: "left" }}>
@@ -39,10 +40,31 @@ export default function GoalSettingsScreen({ tracker, onBack }) {
         </h1>
       </header>
 
+      <section style={{ ...card, padding: "4px 16px", display: "flex", flexDirection: "column" }}>
+        <h2 style={{ margin: "12px 0 0", fontSize: "15px", fontWeight: 600, color: C.text }}>Track</h2>
+        {Object.entries(TRACKERS).map(([id, t], i, all) => {
+          const on = enabled.includes(id);
+          const onlyOne = on && enabled.length === 1;
+          return (
+            <Row key={id} as="label" title={t.label} hint={onlyOne ? "At least one dhikr stays on" : t.forms[t.defaultForm].label} last={i === all.length - 1}>
+              <input
+                type="checkbox"
+                checked={on}
+                disabled={onlyOne}
+                onChange={(e) => setEnabled(id, e.target.checked)}
+                style={{ width: "22px", height: "22px", accentColor: C.accent, flexShrink: 0 }}
+              />
+            </Row>
+          );
+        })}
+      </section>
+
+      <DhikrSwitch tracker={tracker} />
+
       <section style={{ ...card, display: "flex", flexDirection: "column", gap: "12px" }}>
-        <h2 style={{ margin: 0, fontSize: "15px", fontWeight: 600, color: C.text }}>Daily goal</h2>
+        <h2 style={{ margin: 0, fontSize: "15px", fontWeight: 600, color: C.text }}>Daily goal · {info.label}</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "8px" }}>
-          {GOALS.map((g) => {
+          {info.goals.map((g) => {
             const active = settings.goal === g;
             return (
               <button
@@ -71,8 +93,8 @@ export default function GoalSettingsScreen({ tracker, onBack }) {
       </section>
 
       <section style={{ ...card, display: "flex", flexDirection: "column", gap: "12px" }}>
-        <h2 style={{ margin: 0, fontSize: "15px", fontWeight: 600, color: C.text }}>Dhikr</h2>
-        {Object.entries(DHIKR).map(([id, d]) => {
+        <h2 style={{ margin: 0, fontSize: "15px", fontWeight: 600, color: C.text }}>Wording · {info.label}</h2>
+        {Object.entries(info.forms).map(([id, d]) => {
           const active = settings.dhikr === id;
           return (
             <button

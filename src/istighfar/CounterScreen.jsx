@@ -1,18 +1,19 @@
 import { C, FONT, FONT_NUM, iconButton, pillButton } from "./theme";
-import { DHIKR, formatNumber, headerDate } from "./data";
+import { formatNumber, headerDate } from "./data";
+import DhikrSwitch from "./DhikrSwitch";
 import { ChartIcon, ChevronDownIcon, FlameIcon, MoonIcon, SlidersIcon, TapIcon, UndoIcon } from "./icons";
 
 const RING_R = 112;
 const RING_LEN = 2 * Math.PI * RING_R;
 
 export default function CounterScreen({ tracker, onOpenSettings, onOpenHistory, onPocket }) {
-  const { settings, today, now, streak, add, undo, canUndo } = tracker;
+  const { settings, today, now, streak, add, undo, canUndo, info, form } = tracker;
   const { goal } = settings;
   const count = today.count;
   const progress = Math.min(count / goal, 1);
   const pct = Math.floor((count / goal) * 100);
-  const dhikr = DHIKR[settings.dhikr] || DHIKR.short;
-  const isLong = settings.dhikr === "sayyid";
+  const dhikr = form;
+  const isLong = form.arabic.length > 60;
   const showReminder = settings.reminder && new Date(now).getHours() >= 18 && count < goal / 2;
 
   return (
@@ -32,7 +33,7 @@ export default function CounterScreen({ tracker, onOpenSettings, onOpenHistory, 
         <div style={{ display: "flex", flexDirection: "column", gap: "2px", textAlign: "left" }}>
           <span style={{ fontSize: "13px", color: C.muted, fontWeight: 500 }}>{headerDate(now)}</span>
           <h1 style={{ margin: 0, fontFamily: FONT_NUM, fontSize: "28px", fontWeight: 700, letterSpacing: "-0.5px", color: C.text }}>
-            Istighfar
+            {tracker.enabled.length > 1 ? "Dhikr" : info.label}
           </h1>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -48,6 +49,7 @@ export default function CounterScreen({ tracker, onOpenSettings, onOpenHistory, 
                 fontWeight: 600,
                 padding: "8px 12px",
                 borderRadius: "999px",
+                whiteSpace: "nowrap",
               }}
             >
               <FlameIcon stroke={C.streakIcon} /> {streak} {streak === 1 ? "day" : "days"}
@@ -61,6 +63,8 @@ export default function CounterScreen({ tracker, onOpenSettings, onOpenHistory, 
           </button>
         </div>
       </header>
+
+      <DhikrSwitch tracker={tracker} />
 
       {/* Current dhikr — tap to change */}
       <button
@@ -105,14 +109,14 @@ export default function CounterScreen({ tracker, onOpenSettings, onOpenHistory, 
 
       {showReminder && (
         <div style={{ background: C.warnBg, color: C.warnText, borderRadius: "14px", padding: "10px 14px", fontSize: "13px", fontWeight: 500, flexShrink: 0 }}>
-          Gentle reminder · you're at {pct}% of today's goal
+          Gentle reminder · {info.label} is at {pct}% of today's goal
         </div>
       )}
 
       {/* Big tap area */}
       <button
         type="button"
-        aria-label="Tap to count one istighfar"
+        aria-label={`Tap to count one ${info.label}`}
         onClick={() => add(1)}
         style={{
           flexGrow: 1,

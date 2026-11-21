@@ -11,7 +11,9 @@ blanks, From memory — 5 correct recalls marks a dua learnt · daily streak ·
 Dark / Light / Paper themes · tajweed markers · Arabic script & size · JSON
 backup export & import. Design: `docs/design/daily-dua-mockup.html`.
 
-**Istighfar tracker** (bottom tab): tap-to-count with daily goal ring, Undo /
+**Dhikr tracker** (bottom tab) for **Istighfar** and **Hasbunallahu wa ni'mal
+wakeel** — track one or both, each with its own count, goal, streak and history:
+tap-to-count with daily goal ring, Undo /
 +33 / +100, Pocket mode (dark, screen stays awake, hold to exit), streak,
 weekly chart and today's sessions, choice of dhikr, Fajr or midnight day reset,
 vibration feedback. Its design follows `docs/design/istighfar-tracker-mockup.html`.
@@ -64,11 +66,12 @@ environment variable `GEMINI_API_KEY` in the site settings.
 │   │   ├── TajweedText.jsx    Arabic text with tajweed underlines
 │   │   └── icons.jsx          Star, spinner
 │   ├── hooks/useTheme.js      Dark / Light / Paper colour themes
-│   ├── istighfar/             Istighfar tracker (own green style, see theme.js)
+│   ├── istighfar/             Dhikr tracker: Istighfar + Hasbunallah (own green style)
 │   │   ├── IstighfarSection.jsx  Counter, with History and Goal & settings
 │   │   ├── CounterScreen.jsx, PocketMode.jsx, HistoryScreen.jsx, GoalSettingsScreen.jsx
 │   │   ├── useIstighfar.js    State, counting, undo, vibration
-│   │   └── data.js            Storage, day rollover, sessions, stats
+│   │   ├── DhikrSwitch.jsx    Istighfar / Hasbunallah switch
+│   │   └── data.js            Dhikr list (TRACKERS), storage, day rollover, stats
 │   ├── services/
 │   │   ├── extractApi.js      Calls /api/extract and /api/extract-text
 │   │   └── storage.js         localStorage read/write

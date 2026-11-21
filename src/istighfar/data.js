@@ -1,14 +1,17 @@
-// Istighfar tracker — data model and pure helpers (no React here).
+// Dhikr tracker (Istighfar, Hasbunallah) — data model and pure helpers (no React here).
 //
 // Stored in localStorage under "istighfar-tracker":
 // {
-//   settings: { goal, dhikr, resetAt, reminder, strongBuzzEvery },
-//   days: { "YYYY-MM-DD": { count, sessions: [{ start, end, count }] } }
+//   settings: { resetAt, reminder, strongBuzzEvery, enabled: ["istighfar", ...], active },
+//   trackers: {
+//     istighfar:   { goal, form, days: { "YYYY-MM-DD": { count, sessions: [{ start, end, count }] } } },
+//     hasbunallah: { goal, form, days: { ... } }
+//   }
 // }
+// Older saves ({ settings: { goal, dhikr, ... }, days }) are upgraded on load.
 
 export const STORAGE_KEY = "istighfar-tracker";
 
-export const GOALS = [1000, 3000, 5000, 10000];
 export const BUZZ_OPTIONS = [33, 100, 500];
 
 // Fajr time varies by location and season; the day rollover uses a fixed 5 am.
@@ -20,55 +23,113 @@ const SESSION_GAP_MS = 10 * 60 * 1000;
 // Steady pace used for the "About 3h 20m a day" estimate.
 const COUNTS_PER_MINUTE = 50;
 
-export const DHIKR = {
-  short: {
-    label: "Astaghfirullah",
-    hint: "Short form — fastest to count",
-    arabic: "أَسْتَغْفِرُ ٱللَّٰهَ",
-    meaning: "Astaghfirullah · I seek Allah's forgiveness",
+/** Every dhikr the user can track. Each has its own count, goal, streak and history. */
+export const TRACKERS = {
+  istighfar: {
+    label: "Istighfar",
+    goals: [1000, 3000, 5000, 10000],
+    defaultGoal: 10000,
+    defaultForm: "short",
+    forms: {
+      short: {
+        label: "Astaghfirullah",
+        hint: "Short form — fastest to count",
+        arabic: "أَسْتَغْفِرُ ٱللَّٰهَ",
+        meaning: "Astaghfirullah · I seek Allah's forgiveness",
+      },
+      tawbah: {
+        label: "Astaghfirullah wa atubu ilayh",
+        hint: "With tawbah",
+        arabic: "أَسْتَغْفِرُ ٱللَّٰهَ وَأَتُوبُ إِلَيْهِ",
+        meaning: "I seek Allah's forgiveness and turn to Him in repentance",
+      },
+      sayyid: {
+        label: "Sayyidul Istighfar",
+        hint: "Full text shown on screen",
+        arabic: [
+          "اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَٰهَ إِلَّا أَنْتَ خَلَقْتَنِي وَأَنَا عَبْدُكَ",
+          "وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ",
+          "أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ",
+          "أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ وَأَبُوءُ لَكَ بِذَنْبِي",
+          "فَاغْفِرْ لِي فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ",
+        ].join("\n"),
+        meaning: "Sayyidul Istighfar · the master of seeking forgiveness",
+      },
+    },
   },
-  tawbah: {
-    label: "Astaghfirullah wa atubu ilayh",
-    hint: "With tawbah",
-    arabic: "أَسْتَغْفِرُ ٱللَّٰهَ وَأَتُوبُ إِلَيْهِ",
-    meaning: "I seek Allah's forgiveness and turn to Him in repentance",
-  },
-  sayyid: {
-    label: "Sayyidul Istighfar",
-    hint: "Full text shown on screen",
-    arabic: [
-      "اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَٰهَ إِلَّا أَنْتَ خَلَقْتَنِي وَأَنَا عَبْدُكَ",
-      "وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ",
-      "أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ",
-      "أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ وَأَبُوءُ لَكَ بِذَنْبِي",
-      "فَاغْفِرْ لِي فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ",
-    ].join("\n"),
-    meaning: "Sayyidul Istighfar · the master of seeking forgiveness",
+  hasbunallah: {
+    label: "Hasbunallah",
+    goals: [100, 500, 1000, 3000],
+    defaultGoal: 500,
+    defaultForm: "short",
+    forms: {
+      short: {
+        label: "Hasbunallahu wa ni'mal wakeel",
+        hint: "Surah Aal-e-Imran 3:173",
+        arabic: "حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ",
+        meaning: "Hasbunallahu wa ni'mal wakeel · Allah is enough for us",
+      },
+      full: {
+        label: "…ni'mal mawla wa ni'man naseer",
+        hint: "With “the best Protector, the best Helper”",
+        arabic: "حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ\nنِعْمَ الْمَوْلَىٰ وَنِعْمَ النَّصِيرُ",
+        meaning: "Allah is enough for us · the best Protector, the best Helper",
+      },
+    },
   },
 };
 
+export const TRACKER_IDS = Object.keys(TRACKERS);
+
 export const DEFAULT_SETTINGS = {
-  goal: 10000,
-  dhikr: "short",
   resetAt: "fajr", // "fajr" | "midnight"
   reminder: true,
   strongBuzzEvery: 100,
+  enabled: [...TRACKER_IDS],
+  active: "istighfar",
 };
+
+const newTracker = (id) => ({ goal: TRACKERS[id].defaultGoal, form: TRACKERS[id].defaultForm, days: {} });
 
 const EMPTY_DAY = { count: 0, sessions: [] };
 
 // ---------- storage ----------
 
+function normalize(parsed) {
+  const s = parsed?.settings || {};
+  const trackers = Object.fromEntries(TRACKER_IDS.map((id) => [id, { ...newTracker(id), ...parsed?.trackers?.[id] }]));
+
+  // Upgrade the first version, which only tracked Istighfar.
+  if (!parsed?.trackers && parsed?.days) {
+    trackers.istighfar = {
+      goal: s.goal || TRACKERS.istighfar.defaultGoal,
+      form: s.dhikr || TRACKERS.istighfar.defaultForm,
+      days: parsed.days,
+    };
+  }
+
+  const enabled = (Array.isArray(s.enabled) ? s.enabled : DEFAULT_SETTINGS.enabled).filter((id) => TRACKERS[id]);
+  const safeEnabled = enabled.length ? enabled : ["istighfar"];
+  const active = safeEnabled.includes(s.active) ? s.active : safeEnabled[0];
+
+  return {
+    settings: {
+      resetAt: s.resetAt || DEFAULT_SETTINGS.resetAt,
+      reminder: s.reminder ?? DEFAULT_SETTINGS.reminder,
+      strongBuzzEvery: s.strongBuzzEvery || DEFAULT_SETTINGS.strongBuzzEvery,
+      enabled: safeEnabled,
+      active,
+    },
+    trackers,
+  };
+}
+
 export function loadTracker() {
   try {
-    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-    if (parsed && typeof parsed === "object") {
-      return { settings: { ...DEFAULT_SETTINGS, ...parsed.settings }, days: parsed.days || {} };
-    }
+    return normalize(JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"));
   } catch {
-    // corrupt or blocked storage — start fresh
+    return normalize(null); // corrupt or blocked storage — start fresh
   }
-  return { settings: { ...DEFAULT_SETTINGS }, days: {} };
 }
 
 export function saveTracker(data) {
@@ -96,14 +157,13 @@ export function lastSevenKeys(todayKey) {
   return Array.from({ length: 7 }, (_, i) => localISO(new Date(y, m - 1, d - 6 + i)));
 }
 
-export const getDay = (data, key) => data.days[key] || EMPTY_DAY;
+export const getDay = (days, key) => days[key] || EMPTY_DAY;
 
-// ---------- counting ----------
+// ---------- counting (operate on one tracker's `days`) ----------
 
-/** Adds `amount` at time `t`, extending the latest session or starting a new one. */
-export function addCount(data, amount, t) {
-  const key = dayKey(t, data.settings.resetAt);
-  const day = getDay(data, key);
+/** Adds `amount` on day `key` at time `t`, extending the latest session or starting a new one. */
+export function addCount(days, key, amount, t) {
+  const day = getDay(days, key);
   const sessions = [...day.sessions];
   const last = sessions[sessions.length - 1];
   if (last && t - last.end < SESSION_GAP_MS) {
@@ -111,13 +171,13 @@ export function addCount(data, amount, t) {
   } else {
     sessions.push({ start: t, end: t, count: amount });
   }
-  return { ...data, days: { ...data.days, [key]: { count: day.count + amount, sessions } } };
+  return { ...days, [key]: { count: day.count + amount, sessions } };
 }
 
 /** Reverses a previous addCount on day `key`. */
-export function removeCount(data, amount, key) {
-  const day = getDay(data, key);
-  if (!day.count) return data;
+export function removeCount(days, key, amount) {
+  const day = getDay(days, key);
+  if (!day.count) return days;
   const take = Math.min(amount, day.count);
   const sessions = [...day.sessions];
   let left = take;
@@ -128,30 +188,29 @@ export function removeCount(data, amount, key) {
     if (last.count - used <= 0) sessions.pop();
     else sessions[sessions.length - 1] = { ...last, count: last.count - used };
   }
-  return { ...data, days: { ...data.days, [key]: { count: day.count - take, sessions } } };
+  return { ...days, [key]: { count: day.count - take, sessions } };
 }
 
 // ---------- stats ----------
 
-/** Consecutive days with any istighfar, ending today (or yesterday if today is still 0). */
-export function streak(data, todayKey) {
+/** Consecutive days with any count, ending today (or yesterday if today is still 0). */
+export function streak(days, todayKey) {
   const [y, m, d] = todayKey.split("-").map(Number);
-  let i = getDay(data, todayKey).count > 0 ? 0 : 1;
+  let i = getDay(days, todayKey).count > 0 ? 0 : 1;
   let n = 0;
-  while (getDay(data, localISO(new Date(y, m - 1, d - i))).count > 0) {
+  while (getDay(days, localISO(new Date(y, m - 1, d - i))).count > 0) {
     n++;
     i++;
   }
   return n;
 }
 
-export function weekStats(data, todayKey) {
-  const goal = data.settings.goal;
-  const days = lastSevenKeys(todayKey).map((key) => ({ key, count: getDay(data, key).count }));
+export function weekStats(days, todayKey, goal) {
+  const week = lastSevenKeys(todayKey).map((key) => ({ key, count: getDay(days, key).count }));
   return {
-    days,
-    total: days.reduce((sum, d) => sum + d.count, 0),
-    goalHit: days.filter((d) => d.count >= goal).length,
+    days: week,
+    total: week.reduce((sum, d) => sum + d.count, 0),
+    goalHit: week.filter((d) => d.count >= goal).length,
   };
 }
 
@@ -161,10 +220,10 @@ export const formatNumber = (n) => n.toLocaleString("en-US");
 
 export const formatShort = (n) => (n >= 10000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k` : formatNumber(n));
 
-export const formatGoal = (n) => `${n / 1000}k`;
+export const formatGoal = (n) => (n >= 1000 ? `${n / 1000}k` : String(n));
 
 export function paceText(goal) {
-  const minutes = Math.round(goal / COUNTS_PER_MINUTE);
+  const minutes = Math.max(1, Math.round(goal / COUNTS_PER_MINUTE));
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
   return `About ${h ? `${h}h ` : ""}${m ? `${m}m` : ""}`.trim() + " a day at a steady pace";

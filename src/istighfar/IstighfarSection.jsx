@@ -6,7 +6,7 @@ import GoalSettingsScreen from "./GoalSettingsScreen";
 import PocketMode from "./PocketMode";
 
 /**
- * The Istighfar tracker: Counter, with History and Goal & settings opened from its header.
+ * Dhikr tracker (Istighfar, Hasbunallah): Counter, with History and Goal & settings opened from its header.
  * `tracker` comes from useIstighfar() in App, so counts and undo survive tab switches.
  */
 export default function IstighfarSection({ tracker }) {
@@ -33,6 +33,7 @@ export default function IstighfarSection({ tracker }) {
       {content}
       {pocket && (
         <PocketMode
+          label={tracker.info.label}
           count={tracker.today.count}
           goal={tracker.settings.goal}
           strongBuzzEvery={tracker.settings.strongBuzzEvery}

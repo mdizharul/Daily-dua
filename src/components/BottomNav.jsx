@@ -4,7 +4,7 @@ import { BeadsIcon, LibraryIcon, MemorizeIcon } from "../library/icons";
 const ITEMS = [
   { id: "library", label: "Library", Icon: LibraryIcon },
   { id: "memorize", label: "Memorize", Icon: MemorizeIcon },
-  { id: "istighfar", label: "Istighfar", Icon: BeadsIcon },
+  { id: "istighfar", label: "Dhikr", Icon: BeadsIcon },
 ];
 
 /**

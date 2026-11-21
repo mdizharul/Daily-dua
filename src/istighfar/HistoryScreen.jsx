@@ -1,11 +1,12 @@
 import { C, FONT_NUM, card, iconButton } from "./theme";
 import { BackIcon } from "./icons";
+import DhikrSwitch from "./DhikrSwitch";
 import { formatGoal, formatNumber, formatShort, formatTime, sessionLabel, weekdayShort } from "./data";
 
 const BAR_MAX = 140; // px height of a bar that reached the goal
 
 export default function HistoryScreen({ tracker, onBack }) {
-  const { settings, today, todayKey, streak, week } = tracker;
+  const { settings, today, todayKey, streak, week, info } = tracker;
   const { goal } = settings;
 
   const stats = [
@@ -25,10 +26,12 @@ export default function HistoryScreen({ tracker, onBack }) {
           <BackIcon />
         </button>
         <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-          <span style={{ fontSize: "13px", color: C.muted, fontWeight: 500 }}>This week</span>
+          <span style={{ fontSize: "13px", color: C.muted, fontWeight: 500 }}>{info.label} · this week</span>
           <h1 style={{ margin: 0, fontFamily: FONT_NUM, fontSize: "28px", fontWeight: 700, letterSpacing: "-0.5px", color: C.text }}>History</h1>
         </div>
       </header>
+
+      <DhikrSwitch tracker={tracker} />
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "10px" }}>
         {stats.map(({ label, value }) => (

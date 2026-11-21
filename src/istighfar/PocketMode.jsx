@@ -7,7 +7,7 @@ const HOLD_MS = 900;
 const P = C.pocket;
 
 /** Full-screen dark counter: tap anywhere to count, keeps the screen awake, hold to exit. */
-export default function PocketMode({ count, goal, strongBuzzEvery, onAdd, onExit }) {
+export default function PocketMode({ label, count, goal, strongBuzzEvery, onAdd, onExit }) {
   const [holding, setHolding] = useState(false);
   const [awake, setAwake] = useState(false);
   const holdTimer = useRef(null);
@@ -67,7 +67,7 @@ export default function PocketMode({ count, goal, strongBuzzEvery, onAdd, onExit
     >
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "13px", color: P.muted, fontWeight: 500, maxWidth: "480px", width: "100%", margin: "0 auto" }}>
         <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <MoonIcon size={16} /> Pocket mode · screen dimmed
+          <MoonIcon size={16} /> {label} · pocket mode
         </span>
         <span style={{ fontWeight: 400 }}>{awake ? "Screen stays awake" : ""}</span>
       </div>
