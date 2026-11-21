@@ -15,7 +15,6 @@ import DuaDetailView from "./library/DuaDetailView";
 import MemorizeView from "./library/MemorizeView";
 import { getLibraryTheme } from "./library/theme";
 import { RECALL_TARGET, todayKey } from "./library/duaUtils";
-import shareAsImage from "./utils/shareAsImage";
 
 const SECTION_KEY = "app-section"; // "library" | "memorize" | "istighfar"
 function loadSection() {
@@ -300,7 +299,6 @@ export default function App() {
         onRecite={() => handleRecite(selected.id)}
         onToggleLearnt={() => toggleLearnt(selected)}
         onMemorize={() => startMemorize(selected.id, true)}
-        onShare={() => shareAsImage(selected, mode === "night")}
       />
       {nav}
     </>

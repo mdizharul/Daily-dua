@@ -1,6 +1,8 @@
 // Draws a dua as a shareable image in the app's card style (green card, gold
-// labels) and opens the phone's share sheet, or downloads it on desktop.
-// Long lines are wrapped so nothing runs off the edge.
+// labels). Long lines are wrapped so nothing runs off the edge.
+//   renderDuaImage(dua, night) → Promise<Blob>   (used by the Share sheet preview)
+//   shareImage(blob, title)    → phone share sheet, or download on desktop
+//   saveImage(blob, title)     → download
 
 const W = 600;
 const PAD = 44;
@@ -32,7 +34,9 @@ function wrap(ctx, text, maxWidth) {
 
 const split = (t = "") => t.split("\n").map((l) => l.trim()).filter(Boolean);
 
-export default async function shareAsImage(dua, night = false) {
+export const fileNameFor = (title) => `${(title || "dua").replace(/[^\w؀-ۿ]+/g, "-")}.png`;
+
+export async function renderDuaImage(dua, night = false) {
   await document.fonts.ready;
   const root = getComputedStyle(document.documentElement);
   const arabicFont = root.getPropertyValue("--arabic-font").trim() || "'Amiri', serif";
@@ -42,8 +46,8 @@ export default async function shareAsImage(dua, night = false) {
     title: "600 15px 'Inter', sans-serif",
     arabic: `700 ${Math.round(28 * arabicScale)}px ${arabicFont}`,
     label: "600 10px 'Inter', sans-serif",
-    translit: "italic 15px 'Inter', sans-serif",
-    meaning: "500 16px 'Inter', sans-serif",
+    translit: "italic 14px 'Inter', sans-serif",
+    meaning: "500 14px 'Inter', sans-serif",
     footer: "500 11px 'Inter', sans-serif",
   };
 
@@ -53,14 +57,16 @@ export default async function shareAsImage(dua, night = false) {
     measure.font = font;
     return lines.flatMap((l) => wrap(measure, l, MAX_W));
   };
+  const title = wrapAll([dua.title || ""], fonts.title);
   const arabic = wrapAll(split(dua.arabic), fonts.arabic);
   const translit = wrapAll(split(dua.transliteration), fonts.translit);
   const meaning = wrapAll([split(dua.translation).join(" ")].filter(Boolean), fonts.meaning);
 
   const ARABIC_LH = Math.round(50 * arabicScale);
-  let H = 96 + arabic.length * ARABIC_LH + 20;
-  if (translit.length) H += 22 + translit.length * 24 + 16;
-  if (meaning.length) H += 22 + meaning.length * 24 + 16;
+  const LH = 22;
+  let H = 44 + title.length * LH + 22 + arabic.length * ARABIC_LH + 20;
+  if (translit.length) H += 22 + translit.length * LH + 16;
+  if (meaning.length) H += 22 + meaning.length * LH + 16;
   H += 56;
 
   const canvas = document.createElement("canvas");
@@ -80,18 +86,21 @@ export default async function shareAsImage(dua, night = false) {
   ctx.strokeStyle = FRAME;
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.roundRect?.(14, 14, W - 28, H - 28, 22);
-  if (!ctx.roundRect) ctx.rect(14, 14, W - 28, H - 28);
+  if (ctx.roundRect) ctx.roundRect(14, 14, W - 28, H - 28, 22);
+  else ctx.rect(14, 14, W - 28, H - 28);
   ctx.stroke();
 
   ctx.textAlign = "center";
-  let y = 58;
+  ctx.direction = "ltr";
+  let y = 54;
   ctx.font = fonts.title;
   ctx.fillStyle = GOLD;
-  ctx.direction = "ltr";
-  ctx.fillText(dua.title, W / 2, y);
+  title.forEach((line) => {
+    ctx.fillText(line, W / 2, y);
+    y += LH;
+  });
 
-  y = 96 + ARABIC_LH * 0.55;
+  y += 22 + ARABIC_LH * 0.45;
   ctx.font = fonts.arabic;
   ctx.fillStyle = TEXT;
   ctx.direction = "rtl";
@@ -102,17 +111,17 @@ export default async function shareAsImage(dua, night = false) {
   y += 8;
   ctx.direction = "ltr";
 
-  const section = (title, lines, font, color) => {
+  const section = (heading, lines, font, color) => {
     if (!lines.length) return;
     ctx.font = fonts.label;
     ctx.fillStyle = GOLD;
-    ctx.fillText(title.toUpperCase().split("").join(String.fromCharCode(8202)), W / 2, y);
-    y += 24;
+    ctx.fillText(heading.toUpperCase().split("").join(String.fromCharCode(8202)), W / 2, y);
+    y += 22;
     ctx.font = font;
     ctx.fillStyle = color;
     lines.forEach((line) => {
       ctx.fillText(line, W / 2, y);
-      y += 24;
+      y += LH;
     });
     y += 16;
   };
@@ -123,22 +132,30 @@ export default async function shareAsImage(dua, night = false) {
   ctx.fillStyle = MUTED;
   ctx.fillText("Daily Dua · daily-dua-kappa.vercel.app", W / 2, H - 30);
 
-  canvas.toBlob(async (blob) => {
-    const file = new File([blob], `${dua.title.replace(/\s+/g, "-")}.png`, { type: "image/png" });
-    if (navigator.share && navigator.canShare?.({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file], title: dua.title });
-        return;
-      } catch (err) {
-        if (err?.name === "AbortError") return; // user closed the share sheet — don't download
-        // any other share failure: fall through to a plain download
-      }
+  return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+}
+
+export function saveImage(blob, title) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileNameFor(title);
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** Opens the phone's share sheet; falls back to saving the image. Returns "shared" | "saved" | "cancelled". */
+export async function shareImage(blob, title) {
+  const file = new File([blob], fileNameFor(title), { type: "image/png" });
+  if (navigator.share && navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title });
+      return "shared";
+    } catch (err) {
+      if (err?.name === "AbortError") return "cancelled"; // user closed the share sheet
+      // any other share failure: fall back to saving
     }
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = file.name;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, "image/png");
+  }
+  saveImage(blob, title);
+  return "saved";
 }

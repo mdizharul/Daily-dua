@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import ShareSheet from "./ShareSheet";
 import TajweedText from "../components/TajweedText";
 import { FONT_SERIF, chip, column, iconBtn, page, tile } from "./theme";
 import { RECALL_TARGET, categoryLabel, isLearnt, recitedToday, splitLines } from "./duaUtils";
@@ -11,11 +12,20 @@ const SIZES = [
 ];
 
 /** One dua on its own page (mockup screen 3). */
-export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, onBack, onEdit, onDelete, onRecite, onToggleLearnt, onMemorize, onShare }) {
+// Duas longer than this start collapsed, with a "Show full dua" button.
+const isLongDua = (dua) =>
+  splitLines(dua.arabic).length > 3 || dua.arabic.length > 160 || (dua.transliteration || "").length + (dua.translation || "").length > 420;
+
+export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, onBack, onEdit, onDelete, onRecite, onToggleLearnt, onMemorize }) {
   const [showTranslit, setShowTranslit] = useState(true);
   const [showMeaning, setShowMeaning] = useState(true);
   const [speaking, setSpeaking] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const closeShare = useCallback(() => setSharing(false), []);
+  const long = isLongDua(dua);
+  const collapsed = long && !expanded;
 
   // Stop any reading-aloud when leaving the page.
   useEffect(() => () => window.speechSynthesis?.cancel(), []);
@@ -67,7 +77,8 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
           <button type="button" aria-label="Back to library" onClick={onBack} style={iconBtn(L)}>
             <BackIcon />
           </button>
-          <span style={{ fontSize: "15px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "center" }}>{dua.title}</span>
+          {/* Full title, wrapping onto more lines instead of being cut off with "…" */}
+          <h1 style={{ margin: 0, flex: 1, fontSize: "16px", fontWeight: 600, lineHeight: 1.3, textAlign: "center", overflowWrap: "anywhere" }}>{dua.title}</h1>
           <button type="button" aria-label="Edit dua" onClick={onEdit} style={iconBtn(L)}>
             <EditIcon />
           </button>
@@ -81,6 +92,22 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
             <Medallion color={L.gold} />
           </span>
 
+          {/* Long duas are clipped with a fade until "Show full dua" is tapped */}
+          <div
+            id="dua-text"
+            style={{
+              position: "relative",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "16px",
+              width: "100%",
+              maxHeight: collapsed ? "300px" : "none",
+              overflow: "hidden",
+              WebkitMaskImage: collapsed ? "linear-gradient(to bottom, #000 70%, transparent)" : "none",
+              maskImage: collapsed ? "linear-gradient(to bottom, #000 70%, transparent)" : "none",
+            }}
+          >
           <div lang="ar" dir="rtl" style={{ position: "relative", display: "flex", flexDirection: "column", gap: "6px" }}>
             {aLines.map((line, i) => (
               <p key={i} style={{ margin: 0, fontFamily: "var(--arabic-font)", fontSize: `calc(${arabicPx}px * var(--arabic-scale))`, lineHeight: 1.6, fontWeight: 700 }}>
@@ -93,7 +120,7 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
             <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "4px", alignItems: "center" }}>
               <span style={label}>Transliteration</span>
               {tLines.map((line, i) => (
-                <p key={i} style={{ margin: 0, fontSize: "17px", fontStyle: "italic", lineHeight: 1.5, color: L.heroText }}>
+                <p key={i} style={{ margin: 0, fontSize: "15px", fontStyle: "italic", lineHeight: 1.55, color: L.heroText }}>
                   {line}
                 </p>
               ))}
@@ -107,10 +134,24 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
           {showMeaning && mLines.length > 0 && (
             <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "4px", alignItems: "center" }}>
               <span style={label}>Matlab</span>
-              <p style={{ margin: 0, fontFamily: "var(--font-ui)", fontWeight: 500, fontSize: mLines.join(" ").length > 120 ? "16px" : "19px", lineHeight: 1.45, color: L.heroText }}>
+              <p style={{ margin: 0, fontFamily: "var(--font-ui)", fontWeight: 500, fontSize: mLines.join(" ").length > 120 ? "14px" : "15px", lineHeight: 1.55, color: L.heroText }}>
                 “{mLines.join(" ")}”
               </p>
             </div>
+          )}
+
+          </div>
+
+          {long && (
+            <button
+              type="button"
+              aria-expanded={expanded}
+              aria-controls="dua-text"
+              onClick={() => setExpanded(!expanded)}
+              style={{ position: "relative", height: "40px", padding: "0 16px", borderRadius: "999px", border: `1px solid ${L.heroFrame}`, background: "rgba(255,255,255,0.08)", color: L.heroText, fontSize: "13px", fontWeight: 600, fontFamily: "var(--font-ui)", cursor: "pointer" }}
+            >
+              {expanded ? "Show less ▴" : "Show full dua ▾"}
+            </button>
           )}
 
           <span style={{ position: "relative", fontSize: "13px", color: L.heroMuted }}>{categoryLabel(dua)}</span>
@@ -170,7 +211,7 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
           <button type="button" aria-pressed={learnt} onClick={onToggleLearnt} style={{ ...tile(L), ...(learnt ? { background: L.greenBg, borderColor: L.green, color: L.green } : null) }}>
             <CheckIcon /> {learnt ? "Learnt" : "Mark learnt"}
           </button>
-          <button type="button" onClick={onShare} style={{ ...tile(L), background: L.accent, border: "none", color: L.onAccent, fontWeight: 700 }}>
+          <button type="button" onClick={() => setSharing(true)} style={{ ...tile(L), background: L.accent, border: "none", color: L.onAccent, fontWeight: 700 }}>
             <ShareIcon /> Share card
           </button>
         </div>
@@ -184,6 +225,7 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
           </button>
         </div>
       </div>
+      {sharing && <ShareSheet dua={dua} night={document.documentElement.dataset.theme === "night"} onClose={closeShare} />}
     </div>
   );
 }

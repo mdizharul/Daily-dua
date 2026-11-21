@@ -109,7 +109,7 @@ export default function LibraryView({ L, duas, filters, setFilters, streak, onOp
               style={{ display: "flex", flexDirection: "column", gap: "4px", background: L.card, border: `1px solid ${L.border}`, borderRadius: "20px", padding: "12px 16px", textAlign: "left", color: L.text, cursor: "pointer", fontFamily: "var(--font-ui)", width: "100%" }}
             >
               <span style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", width: "100%" }}>
-                <span style={{ fontSize: "14px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{dua.title}</span>
+                <span style={{ fontSize: "14px", fontWeight: 600, lineHeight: 1.35, overflowWrap: "anywhere" }}>{dua.title}</span>
                 <span style={{ flexShrink: 0, fontSize: "11px", fontWeight: 600, color: isLearnt(dua) ? L.green : L.tagText, background: isLearnt(dua) ? L.greenBg : L.tagBg, padding: "3px 8px", borderRadius: "999px" }}>
                   {isLearnt(dua) ? "Learnt" : categoryLabel(dua)}
                 </span>
