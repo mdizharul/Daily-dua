@@ -10,6 +10,11 @@ recite counter & daily streak · search and category filters · share a dua as a
 image · Dark / Light / Paper themes · tajweed markers · Arabic font size ·
 JSON backup export & import.
 
+**Istighfar tracker** (bottom tab): tap-to-count with daily goal ring, Undo /
++33 / +100, Pocket mode (dark, screen stays awake, hold to exit), streak,
+weekly chart and today's sessions, choice of dhikr, Fajr or midnight day reset,
+vibration feedback. Its design follows `docs/design/istighfar-tracker-mockup.html`.
+
 Built with React 19 + Vite. Duas and settings are stored in the browser's
 `localStorage`; the Gemini API key stays on the server.
 
@@ -52,10 +57,16 @@ environment variable `GEMINI_API_KEY` in the site settings.
 │   │   └── SettingsView.jsx   Script, tajweed, font size, backup/import/clear
 │   ├── components/
 │   │   ├── DuaCard.jsx        One dua card
+│   │   ├── BottomNav.jsx      Duas · Istighfar · History tabs
 │   │   ├── TajweedText.jsx    Arabic text with tajweed underlines
 │   │   ├── icons.jsx          Star, background pattern, spinner
 │   │   └── islamic.jsx        Decorative patterns, seal, divider, frame
 │   ├── hooks/useTheme.js      Dark / Light / Paper colour themes
+│   ├── istighfar/             Istighfar tracker (own green style, see theme.js)
+│   │   ├── IstighfarSection.jsx  Switches Counter / History / Goal & settings
+│   │   ├── CounterScreen.jsx, PocketMode.jsx, HistoryScreen.jsx, GoalSettingsScreen.jsx
+│   │   ├── useIstighfar.js    State, counting, undo, vibration
+│   │   └── data.js            Storage, day rollover, sessions, stats
 │   ├── services/
 │   │   ├── extractApi.js      Calls /api/extract and /api/extract-text
 │   │   └── storage.js         localStorage read/write
@@ -64,5 +75,6 @@ environment variable `GEMINI_API_KEY` in the site settings.
 │   ├── gemini.js              Gemini prompts + calls — edit prompts here
 │   └── netlify.js             Adapter for Netlify functions
 ├── api/                       Vercel functions  → server/gemini.js
-└── netlify/functions/         Netlify functions → server/gemini.js
+├── netlify/functions/         Netlify functions → server/gemini.js
+└── docs/design/               Design mockups (Istighfar tracker)
 ```

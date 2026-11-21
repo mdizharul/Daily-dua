@@ -3,7 +3,6 @@ import { STATUS_MAP, CATEGORY_MAP } from "../constants";
 import { GeoBg, StarIcon } from "./icons";
 import { IslamicPattern, BadgeSeal, GoldDivider, MihrabFrame } from "./islamic";
 import TajweedText from "./TajweedText";
-import { TAJWEED_LEGEND } from "../utils/tajweed";
 
 const DuaCard = ({ dua, onStatusChange, onDelete, onEdit, onRecite, onShare, T, themeMode, tajweed, fontSize = 1.2 }) => {
   const [expanded, setExpanded] = useState(true);
@@ -48,11 +47,11 @@ const DuaCard = ({ dua, onStatusChange, onDelete, onEdit, onRecite, onShare, T, 
         {/* Status badge + dua number */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", marginTop: "0.3rem" }}>
           <button onClick={() => { if (navigator.vibrate) navigator.vibrate(20); const o = ["new","learning","memorized"]; onStatusChange(o[(o.indexOf(dua.status||"new")+1)%3]); }}
-            style={{ background: st.bg, border: `1px solid ${st.border}`, borderRadius: "20px", padding: "0.12rem 0.55rem", color: st.text, cursor: "pointer", fontSize: "0.62rem", fontFamily: "'Cormorant Garamond', serif", fontWeight: 600, whiteSpace: "nowrap" }}>
+            style={{ background: st.bg, border: `1px solid ${st.border}`, borderRadius: "20px", padding: "0.12rem 0.55rem", color: st.text, cursor: "pointer", fontSize: "0.62rem", fontFamily: "var(--font-ui)", fontWeight: 600, whiteSpace: "nowrap" }}>
             {st.label}
           </button>
           {dua.category && CATEGORY_MAP[dua.category] && (
-            <span style={{ fontSize: "0.6rem", color: T.goldFaint, fontFamily: "'Cormorant Garamond', serif", display: "flex", alignItems: "center", gap: "0.2rem" }}>
+            <span style={{ fontSize: "0.6rem", color: T.goldFaint, fontFamily: "var(--font-ui)", display: "flex", alignItems: "center", gap: "0.2rem" }}>
               <span>{CATEGORY_MAP[dua.category].icon}</span> {CATEGORY_MAP[dua.category].label}
             </span>
           )}
@@ -90,7 +89,6 @@ const DuaCard = ({ dua, onStatusChange, onDelete, onEdit, onRecite, onShare, T, 
               direction: "rtl",
               margin: 0,
               fontWeight: 700,
-              textShadow: isLight ? "none" : isPaper ? "none" : "0 0 30px rgba(201,168,76,0.12)",
             }}>
               {tajweed ? <TajweedText text={line} defaultColor={T.arabic} /> : line}
             </p>
@@ -114,8 +112,8 @@ const DuaCard = ({ dua, onStatusChange, onDelete, onEdit, onRecite, onShare, T, 
             {/* Translation — smaller, below transliteration */}
             {trLines[i] && (
               <p style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: "0.82rem",
+                fontFamily: "var(--font-ui)",
+                fontSize: "0.78rem",
                 lineHeight: 1.6,
                 color: T.transl,
                 margin: "0.2rem 0 0",
@@ -139,23 +137,12 @@ const DuaCard = ({ dua, onStatusChange, onDelete, onEdit, onRecite, onShare, T, 
           <p style={{ fontFamily: "var(--arabic-font)", fontSize: "calc(1.1rem * var(--arabic-scale))", color: isLight ? "rgba(26,26,26,0.4)" : isPaper ? "rgba(45,26,0,0.4)" : "rgba(232,220,200,0.45)", direction: "rtl", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {aLines[0]}...
           </p>
-          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "0.78rem", color: T.goldFaint, margin: "0.3rem 0 0" }}>
+          <p style={{ fontFamily: "var(--font-ui)", fontSize: "0.78rem", color: T.goldFaint, margin: "0.3rem 0 0" }}>
             {aLines.length} lines · Tap to expand
           </p>
         </div>
       )}
 
-      {/* ── Tajweed legend ── */}
-      {tajweed && expanded && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem 0.9rem", margin: "0.6rem 1.2rem 0", paddingTop: "0.6rem", borderTop: `1px solid ${T.divider}`, justifyContent: "center" }}>
-          {TAJWEED_LEGEND.map(({ label, color, desc }) => (
-            <span key={label} style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "0.65rem", color, display: "flex", alignItems: "center", gap: "0.25rem" }}>
-              <span style={{ fontFamily: "'Amiri', serif", fontSize: "0.85rem" }}>{desc}</span>
-              <span style={{ opacity: 0.7 }}>{label}</span>
-            </span>
-          ))}
-        </div>
-      )}
 
       {/* ── Bottom Divider ── */}
       {isLight ? (
@@ -223,7 +210,7 @@ const DuaCard = ({ dua, onStatusChange, onDelete, onEdit, onRecite, onShare, T, 
           {/* Recite counter — pill, far right */}
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "0.25rem", background: T.btnBg, borderRadius: "20px", padding: "0.15rem 0.4rem 0.15rem 0.55rem", border: `1px solid ${T.btnBorder}` }}>
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={T.btnText} strokeWidth="2" strokeLinecap="round"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
-            <span style={{ fontSize: "0.62rem", color: T.btnText, fontFamily: "'Cormorant Garamond', serif" }}>{dua.reciteCount || 0}</span>
+            <span style={{ fontSize: "0.62rem", color: T.btnText, fontFamily: "var(--font-ui)" }}>{dua.reciteCount || 0}</span>
             <button onClick={onRecite} title="Count recitation" style={{ width: "18px", height: "18px", borderRadius: "50%", background: T.revealOn, border: `1px solid ${T.btnBorder}`, color: T.revealOnText, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", fontWeight: 700, lineHeight: 1, padding: 0 }}>+</button>
           </div>
         </div>

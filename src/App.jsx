@@ -9,9 +9,29 @@ import HomeView from "./views/HomeView";
 import SettingsView from "./views/SettingsView";
 import AddEditView from "./views/AddEditView";
 import ReviewView from "./views/ReviewView";
+import BottomNav from "./components/BottomNav";
+import IstighfarSection from "./istighfar/IstighfarSection";
+import useIstighfar from "./istighfar/useIstighfar";
+
+const SECTION_KEY = "app-section"; // "duas" | "istighfar" | "history"
+function loadSection() {
+  try {
+    const s = localStorage.getItem(SECTION_KEY);
+    return ["duas", "istighfar", "history"].includes(s) ? s : "duas";
+  } catch {
+    return "duas";
+  }
+}
 
 export default function App() {
   const { mode, cycleMode, T, icon: modeIcon, isPaper, isLight, isDark } = useTheme();
+  const istighfar = useIstighfar();
+  const [section, setSectionState] = useState(loadSection);
+  const setSection = (s) => {
+    setSectionState(s);
+    window.scrollTo(0, 0);
+    try { localStorage.setItem(SECTION_KEY, s); } catch { /* storage blocked */ }
+  };
 
   const [duas, setDuas]           = useState([]);
   const [loading, setLoading]     = useState(true);
@@ -221,13 +241,19 @@ export default function App() {
     </div>
   );
 
+  const nav = <BottomNav section={section} onChange={setSection} T={T} />;
+
+  /* ══ ISTIGHFAR TRACKER ══ */
+  if (section !== "duas") return (
+    <>
+      <IstighfarSection tab={section} tracker={istighfar} />
+      {nav}
+    </>
+  );
+
   return (
-    <div style={{ minHeight: "100vh", background: T.appBg, color: T.appColor, fontFamily: "'Cormorant Garamond', serif" }}>
+    <div style={{ minHeight: "100vh", background: T.appBg, color: T.appColor, fontFamily: "var(--font-ui)", paddingBottom: "var(--nav-h)" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Amiri+Quran&family=Lateef:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
-        @keyframes fadeIn  { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:translateY(0) } }
-        @keyframes spin    { from { transform:rotate(0deg) } to { transform:rotate(360deg) } }
-        @keyframes shimmer { 0% { background-position:-200% center } 100% { background-position:200% center } }
         textarea:focus, input:focus { border-color: ${T.focusBorder} !important; box-shadow: 0 0 20px ${T.focusShadow} !important; outline: none !important; }
         * { box-sizing: border-box; }
       `}</style>
@@ -237,7 +263,7 @@ export default function App() {
         {/* Top-left: Back / Vault button */}
         {view === "home" ? (
           <button onClick={() => { setArchiveView(!archiveView); setFilter("all"); setCategoryFilter("all"); setSearchQuery(""); }}
-            style={{ position: "absolute", top: "1.25rem", left: "1.2rem", background: archiveView ? (isDark ? "rgba(100,210,120,0.15)" : isPaper ? "rgba(139,94,32,0.15)" : "rgba(26,107,60,0.1)") : "none", border: archiveView ? `1px solid ${isDark ? "rgba(100,210,120,0.3)" : isPaper ? "rgba(139,94,32,0.3)" : "rgba(26,107,60,0.25)"}` : "none", borderRadius: "20px", padding: "0.2rem 0.7rem", color: archiveView ? (isDark ? "#7ec97e" : T.heading) : T.goldFaint, cursor: "pointer", fontSize: "0.72rem", fontFamily: "'Cormorant Garamond', serif", fontWeight: 600, letterSpacing: "1px" }}>
+            style={{ position: "absolute", top: "1.25rem", left: "1.2rem", background: archiveView ? (isDark ? "rgba(100,210,120,0.15)" : isPaper ? "rgba(139,94,32,0.15)" : "rgba(26,107,60,0.1)") : "none", border: archiveView ? `1px solid ${isDark ? "rgba(100,210,120,0.3)" : isPaper ? "rgba(139,94,32,0.3)" : "rgba(26,107,60,0.25)"}` : "none", borderRadius: "20px", padding: "0.2rem 0.7rem", color: archiveView ? (isDark ? "#7ec97e" : T.heading) : T.goldFaint, cursor: "pointer", fontSize: "0.72rem", fontFamily: "var(--font-ui)", fontWeight: 600, letterSpacing: "1px" }}>
             {archiveView ? "← Live" : `✓ Vault (${archivedDuas.length})`}
           </button>
         ) : (
@@ -251,7 +277,7 @@ export default function App() {
         <div style={{ position: "absolute", top: "1.2rem", right: "1.2rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <button onClick={cycleMode}
             title={`Theme: ${mode}`}
-            style={{ background: isDark ? "rgba(201,168,76,0.08)" : isLight ? "rgba(26,107,60,0.08)" : "rgba(139,94,32,0.08)", border: `1px solid ${isDark ? "rgba(201,168,76,0.15)" : isLight ? "rgba(26,107,60,0.15)" : "rgba(139,94,32,0.15)"}`, borderRadius: "20px", padding: "0.15rem 0.55rem", color: T.gold, cursor: "pointer", fontSize: "0.85rem", fontFamily: "'Cormorant Garamond', serif", display: "flex", alignItems: "center", gap: "0.3rem", transition: "all 0.2s" }}>
+            style={{ background: isDark ? "rgba(201,168,76,0.08)" : isLight ? "rgba(26,107,60,0.08)" : "rgba(139,94,32,0.08)", border: `1px solid ${isDark ? "rgba(201,168,76,0.15)" : isLight ? "rgba(26,107,60,0.15)" : "rgba(139,94,32,0.15)"}`, borderRadius: "20px", padding: "0.15rem 0.55rem", color: T.gold, cursor: "pointer", fontSize: "0.85rem", fontFamily: "var(--font-ui)", display: "flex", alignItems: "center", gap: "0.3rem", transition: "all 0.2s" }}>
             <span>{modeIcon}</span>
           </button>
           <button onClick={() => { setView(view === "settings" ? "home" : "settings"); }}
@@ -280,7 +306,7 @@ export default function App() {
         {streak.count > 0 && (
           <div style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", marginTop: "0.4rem", padding: "0.2rem 0.75rem", background: streak.count >= 7 ? "rgba(255,140,0,0.12)" : (isDark ? "rgba(201,168,76,0.08)" : isLight ? "rgba(26,107,60,0.06)" : "rgba(139,94,32,0.08)"), border: `1px solid ${streak.count >= 7 ? "rgba(255,140,0,0.3)" : T.goldFaint}`, borderRadius: "20px" }}>
             <span style={{ fontSize: "0.85rem" }}>{streak.count >= 7 ? "🔥" : "✨"}</span>
-            <span style={{ fontSize: "0.72rem", color: streak.count >= 7 ? "#ff8c00" : T.gold, fontFamily: "'Cormorant Garamond', serif", fontWeight: 600 }}>{streak.count} day streak</span>
+            <span style={{ fontSize: "0.72rem", color: streak.count >= 7 ? "#ff8c00" : T.gold, fontFamily: "var(--font-ui)", fontWeight: 600 }}>{streak.count} day streak</span>
           </div>
         )}
       </div>
@@ -380,6 +406,7 @@ export default function App() {
         )}
 
       </div>
+      {nav}
     </div>
   );
 }

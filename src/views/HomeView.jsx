@@ -16,7 +16,7 @@ export default function HomeView({
   resetForm, setEditIdx, setView,
   T, themeMode,
 }) {
-  const inputStyle = { width: "100%", padding: "0.8rem 1rem", background: T.inputBg, border: `1px solid ${T.inputBorder}`, borderRadius: "12px", color: T.appColor, fontSize: "0.95rem", fontFamily: "'Cormorant Garamond', serif", outline: "none", resize: "vertical", boxSizing: "border-box" };
+  const inputStyle = { width: "100%", padding: "0.8rem 1rem", background: T.inputBg, border: `1px solid ${T.inputBorder}`, borderRadius: "12px", color: T.appColor, fontSize: "0.95rem", fontFamily: "var(--font-ui)", outline: "none", resize: "vertical", boxSizing: "border-box" };
 
   return (
     <div style={{ animation: "fadeIn 0.4s ease-out" }}>
@@ -31,8 +31,8 @@ export default function HomeView({
           ].map(({ label, value, icon, color }) => (
             <div key={label} style={{ background: T.cardBg, borderRadius: "14px", border: `1px solid ${T.cardBorder}`, padding: "0.65rem 0.5rem", textAlign: "center" }}>
               <div style={{ fontSize: "1rem", marginBottom: "0.15rem" }}>{icon}</div>
-              <div style={{ fontSize: "1.2rem", fontWeight: 700, color, fontFamily: "'Cormorant Garamond', serif" }}>{value}</div>
-              <div style={{ fontSize: "0.62rem", color: T.goldFaint, fontFamily: "'Cormorant Garamond', serif", letterSpacing: "0.5px" }}>{label}</div>
+              <div style={{ fontSize: "1.2rem", fontWeight: 700, color, fontFamily: "var(--font-ui)" }}>{value}</div>
+              <div style={{ fontSize: "0.62rem", color: T.goldFaint, fontFamily: "var(--font-ui)", letterSpacing: "0.5px" }}>{label}</div>
             </div>
           ))}
         </div>
@@ -68,16 +68,16 @@ export default function HomeView({
       </div>
 
       {/* Category filter row */}
-      <div style={{ display: "flex", gap: "0.35rem", marginBottom: "0.6rem", overflowX: "auto", paddingBottom: "0.2rem" }}>
+      <div className="no-scrollbar" style={{ display: "flex", gap: "0.35rem", marginBottom: "0.6rem", overflowX: "auto", paddingBottom: "0.2rem" }}>
         <button onClick={() => setCategoryFilter("all")}
-          style={{ flexShrink: 0, background: categoryFilter === "all" ? T.btnBg : "transparent", border: `1px solid ${categoryFilter === "all" ? T.gold : T.btnBorder}`, borderRadius: "20px", padding: "0.2rem 0.65rem", color: categoryFilter === "all" ? T.gold : T.goldFaint, cursor: "pointer", fontSize: "0.72rem", fontFamily: "'Cormorant Garamond', serif", fontWeight: categoryFilter === "all" ? 600 : 400, whiteSpace: "nowrap" }}>
+          style={{ flexShrink: 0, background: categoryFilter === "all" ? T.btnBg : "transparent", border: `1px solid ${categoryFilter === "all" ? T.gold : T.btnBorder}`, borderRadius: "20px", padding: "0.2rem 0.65rem", color: categoryFilter === "all" ? T.gold : T.goldFaint, cursor: "pointer", fontSize: "0.72rem", fontFamily: "var(--font-ui)", fontWeight: categoryFilter === "all" ? 600 : 400, whiteSpace: "nowrap" }}>
           All
         </button>
         {CATEGORIES.map(cat => {
           const active = categoryFilter === cat.id;
           return (
             <button key={cat.id} onClick={() => setCategoryFilter(cat.id)}
-              style={{ flexShrink: 0, background: active ? T.btnBg : "transparent", border: `1px solid ${active ? T.gold : T.btnBorder}`, borderRadius: "20px", padding: "0.2rem 0.65rem", color: active ? T.gold : T.goldFaint, cursor: "pointer", fontSize: "0.72rem", fontFamily: "'Cormorant Garamond', serif", fontWeight: active ? 600 : 400, whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: "0.2rem" }}>
+              style={{ flexShrink: 0, background: active ? T.btnBg : "transparent", border: `1px solid ${active ? T.gold : T.btnBorder}`, borderRadius: "20px", padding: "0.2rem 0.65rem", color: active ? T.gold : T.goldFaint, cursor: "pointer", fontSize: "0.72rem", fontFamily: "var(--font-ui)", fontWeight: active ? 600 : 400, whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: "0.2rem" }}>
               <span style={{ fontSize: "0.7rem" }}>{cat.icon}</span> {cat.label}
             </button>
           );
@@ -89,7 +89,7 @@ export default function HomeView({
         {["all","new","learning"].map((f) => {
           const active = filter === f;
           const c = f === "all" ? { text: T.gold, bg: T.btnBg, border: T.cardBorder } : STATUS_MAP[f];
-          return <button key={f} onClick={() => setFilter(f)} style={{ background: active ? c.bg : "transparent", border: `1px solid ${active ? c.border : T.btnBorder}`, borderRadius: "20px", padding: "0.25rem 0.7rem", color: active ? c.text : T.goldFaint, cursor: "pointer", fontSize: "0.75rem", fontFamily: "'Cormorant Garamond', serif", fontWeight: active ? 600 : 400 }}>
+          return <button key={f} onClick={() => setFilter(f)} style={{ background: active ? c.bg : "transparent", border: `1px solid ${active ? c.border : T.btnBorder}`, borderRadius: "20px", padding: "0.25rem 0.7rem", color: active ? c.text : T.goldFaint, cursor: "pointer", fontSize: "0.75rem", fontFamily: "var(--font-ui)", fontWeight: active ? 600 : 400 }}>
             {f === "all" ? "All" : STATUS_MAP[f].label} ({counts[f]})
           </button>;
         })}
@@ -129,7 +129,7 @@ export default function HomeView({
       {filteredDuas.length === 0 && (
         <div style={{ textAlign: "center", padding: "3rem 1rem", color: T.goldFaint }}>
           <p style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>{archiveView ? "🏆" : "☽"}</p>
-          <p style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+          <p style={{ fontFamily: "var(--font-ui)" }}>
             {archiveView ? "No memorized duas yet. Mark duas as Memorized to move them here." : filter === "all" ? "No duas yet. Upload a screenshot to begin." : `No ${STATUS_MAP[filter]?.label.toLowerCase()} duas.`}
           </p>
         </div>

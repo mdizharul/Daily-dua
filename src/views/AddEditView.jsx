@@ -14,9 +14,9 @@ export default function AddEditView({
 }) {
   const [pasteText, setPasteText] = useState("");
 
-  const inputStyle = { width: "100%", padding: "0.8rem 1rem", background: T.inputBg, border: `1px solid ${T.inputBorder}`, borderRadius: "12px", color: T.appColor, fontSize: "0.95rem", fontFamily: "'Cormorant Garamond', serif", outline: "none", resize: "vertical", boxSizing: "border-box" };
-  const labelStyle = { display: "block", fontFamily: "'Cormorant Garamond', serif", fontSize: "0.82rem", fontWeight: 600, color: T.gold, marginBottom: "0.35rem", letterSpacing: "1px", textTransform: "uppercase" };
-  const btnStyle   = { background: T.btnBg, border: `1px solid ${T.btnBorder}`, borderRadius: "8px", padding: "0.22rem 0.55rem", color: T.btnText, cursor: "pointer", fontSize: "0.7rem", fontFamily: "'Cormorant Garamond', serif" };
+  const inputStyle = { width: "100%", padding: "0.8rem 1rem", background: T.inputBg, border: `1px solid ${T.inputBorder}`, borderRadius: "12px", color: T.appColor, fontSize: "0.95rem", fontFamily: "var(--font-ui)", outline: "none", resize: "vertical", boxSizing: "border-box" };
+  const labelStyle = { display: "block", fontFamily: "var(--font-ui)", fontSize: "0.82rem", fontWeight: 600, color: T.gold, marginBottom: "0.35rem", letterSpacing: "1px", textTransform: "uppercase" };
+  const btnStyle   = { background: T.btnBg, border: `1px solid ${T.btnBorder}`, borderRadius: "8px", padding: "0.22rem 0.55rem", color: T.btnText, cursor: "pointer", fontSize: "0.7rem", fontFamily: "var(--font-ui)" };
 
   return (
     <div style={{ animation: "fadeIn 0.3s ease-out" }}>
@@ -32,7 +32,7 @@ export default function AddEditView({
             <div style={{ display: "flex", gap: "0.4rem", marginBottom: "1rem", padding: "0.25rem", background: T.inputBg, borderRadius: "30px", border: `1px solid ${T.cardBorder}` }}>
               {[{ id: "screenshot", icon: "📷", label: "Screenshot" }, { id: "paste", icon: "📋", label: "Paste" }].map(({ id, icon, label }) => (
                 <button key={id} onClick={() => setAddMode(id)}
-                  style={{ flex: 1, padding: "0.4rem", background: addMode === id ? T.btnBg : "transparent", border: "none", borderRadius: "24px", color: addMode === id ? T.gold : T.goldFaint, cursor: "pointer", fontSize: "0.78rem", fontFamily: "'Cormorant Garamond', serif", fontWeight: addMode === id ? 600 : 400, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.3rem", transition: "all 0.2s" }}>
+                  style={{ flex: 1, padding: "0.4rem", background: addMode === id ? T.btnBg : "transparent", border: "none", borderRadius: "24px", color: addMode === id ? T.gold : T.goldFaint, cursor: "pointer", fontSize: "0.78rem", fontFamily: "var(--font-ui)", fontWeight: addMode === id ? 600 : 400, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.3rem", transition: "all 0.2s" }}>
                   {icon} {label}
                 </button>
               ))}
@@ -168,7 +168,7 @@ export default function AddEditView({
               const active = selectedCategory === cat.id;
               return (
                 <button key={cat.id} type="button" onClick={() => setSelectedCategory(cat.id)}
-                  style={{ background: active ? T.btnBg : "transparent", border: `1px solid ${active ? T.gold : T.cardBorder}`, borderRadius: "20px", padding: "0.25rem 0.75rem", color: active ? T.gold : T.goldFaint, cursor: "pointer", fontSize: "0.78rem", fontFamily: "'Cormorant Garamond', serif", fontWeight: active ? 600 : 400, transition: "all 0.15s", display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                  style={{ background: active ? T.btnBg : "transparent", border: `1px solid ${active ? T.gold : T.cardBorder}`, borderRadius: "20px", padding: "0.25rem 0.75rem", color: active ? T.gold : T.goldFaint, cursor: "pointer", fontSize: "0.78rem", fontFamily: "var(--font-ui)", fontWeight: active ? 600 : 400, transition: "all 0.15s", display: "flex", alignItems: "center", gap: "0.25rem" }}>
                   <span style={{ fontSize: "0.75rem" }}>{cat.icon}</span> {cat.label}
                 </button>
               );

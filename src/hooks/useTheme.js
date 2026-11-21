@@ -4,9 +4,10 @@ import { loadThemeMode, saveThemeMode } from "../services/storage";
 const DARK = {
   mode: "dark",
   appBg: "linear-gradient(170deg, #0a1a0e 0%, #0d1710 40%, #111a14 100%)",
+  navBg: "#0c1610",
   appColor: "#e8dcc8",
   gold: "#c9a84c",
-  goldFaint: "rgba(201,168,76,0.5)",
+  goldFaint: "rgba(214,186,112,0.78)",
   cardBg: "linear-gradient(145deg, #1a2a1a 0%, #0f1f14 50%, #162016 100%)",
   cardBorder: "rgba(201,168,76,0.2)",
   inputBg: "rgba(201,168,76,0.05)",
@@ -15,7 +16,7 @@ const DARK = {
   focusShadow: "rgba(201,168,76,0.1)",
   btnBg: "rgba(201,168,76,0.08)",
   btnBorder: "rgba(201,168,76,0.15)",
-  btnText: "rgba(201,168,76,0.55)",
+  btnText: "rgba(214,186,112,0.8)",
   ctaBg: "linear-gradient(135deg, #c9a84c 0%, #a8883a 100%)",
   ctaColor: "#0a1a0e",
   ctaShadow: "0 4px 18px rgba(201,168,76,0.3)",
@@ -25,7 +26,7 @@ const DARK = {
   title: "#c9a84c",
   arabic: "#e8dcc8",
   translit: "#c9a84c",
-  transl: "rgba(232,220,200,0.55)",
+  transl: "rgba(232,220,200,0.82)",
   divider: "rgba(201,168,76,0.08)",
   revealOn: "rgba(201,168,76,0.15)",
   revealOnBorder: "rgba(201,168,76,0.4)",
@@ -45,6 +46,7 @@ const DARK = {
 const PAPER = {
   mode: "paper",
   appBg: "linear-gradient(170deg, #f5ede0 0%, #ede0c8 40%, #f0e8d5 100%)",
+  navBg: "#efe5d0",
   appColor: "#2d1a00",
   gold: "#7a4a00",
   goldFaint: "rgba(122,74,0,0.5)",
@@ -86,6 +88,7 @@ const LIGHT = {
   mode: "light",
   // Laylatul Qadr palette — high contrast on cream/beige
   appBg: "linear-gradient(170deg, #f5efe2 0%, #ece3d0 40%, #f0e8d5 100%)",
+  navBg: "#f3ecdd",
   appColor: "#2c2c2c",
   gold: "#8b6914",         // deep warm gold — visible on cream
   goldFaint: "#9e8045",    // muted gold — still readable

@@ -1,11 +1,12 @@
 import { saveTajweedMode, saveFontSize, saveDuas } from "../services/storage";
+import { TAJWEED_LEGEND } from "../utils/tajweed";
 
 export default function SettingsView({
   duas, setDuas, tajweedMode, setTajweedMode,
   arabicFontSize, setArabicFontSize, scriptMode, setScriptMode,
   importRef, handleImport, T,
 }) {
-  const btnStyle = { background: T.btnBg, border: `1px solid ${T.btnBorder}`, borderRadius: "8px", padding: "0.22rem 0.55rem", color: T.btnText, cursor: "pointer", fontSize: "0.7rem", fontFamily: "'Cormorant Garamond', serif" };
+  const btnStyle = { background: T.btnBg, border: `1px solid ${T.btnBorder}`, borderRadius: "8px", padding: "0.22rem 0.55rem", color: T.btnText, cursor: "pointer", fontSize: "0.7rem", fontFamily: "var(--font-ui)" };
 
   return (
     <div style={{ animation: "fadeIn 0.3s ease-out" }}>
@@ -24,7 +25,7 @@ export default function SettingsView({
               const active = scriptMode === id;
               return (
                 <button key={id} onClick={() => setScriptMode(id)}
-                  style={{ flex: 1, padding: "0.4rem 0.6rem", background: active ? T.cardBg : "transparent", border: active ? `1px solid ${T.gold}` : "1px solid transparent", borderRadius: "20px", color: active ? T.gold : T.goldFaint, cursor: "pointer", fontSize: "0.78rem", fontFamily: "'Cormorant Garamond', serif", fontWeight: active ? 600 : 400, transition: "all 0.2s" }}>
+                  style={{ flex: 1, padding: "0.4rem 0.6rem", background: active ? T.cardBg : "transparent", border: active ? `1px solid ${T.gold}` : "1px solid transparent", borderRadius: "20px", color: active ? T.gold : T.goldFaint, cursor: "pointer", fontSize: "0.78rem", fontFamily: "var(--font-ui)", fontWeight: active ? 600 : 400, transition: "all 0.2s" }}>
                   {label}
                 </button>
               );
@@ -37,6 +38,16 @@ export default function SettingsView({
           <div>
             <p style={{ margin: 0, fontSize: "0.9rem", fontWeight: 600, color: tajweedMode ? "#9b59b6" : T.gold }}>🎨 Tajweed Markers</p>
             <p style={{ margin: "0.1rem 0 0", fontSize: "0.72rem", color: T.goldFaint }}>Subtle underlines: Ghunna · Qalqalah · Madd</p>
+            {tajweedMode && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem 0.8rem", marginTop: "0.4rem" }}>
+                {TAJWEED_LEGEND.map(({ label, color, desc }) => (
+                  <span key={label} style={{ fontSize: "0.68rem", color, display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                    <span style={{ fontFamily: "var(--arabic-font)", fontSize: "calc(0.85rem * var(--arabic-scale))" }}>{desc}</span>
+                    {label}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
           <button onClick={() => { const next = !tajweedMode; setTajweedMode(next); saveTajweedMode(next); }}
             style={{ width: "44px", height: "24px", borderRadius: "12px", background: tajweedMode ? "#9b59b6" : T.btnBg, border: "none", cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
