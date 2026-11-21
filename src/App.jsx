@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { loadDuas, saveDuas, loadTajweedMode, loadFontSize, loadStreak, saveStreak, loadScriptMode, saveScriptMode } from "./services/storage";
 import hashImage from "./utils/hashImage";
 import { extractDuaFromImage, extractDuaFromText } from "./services/extractApi";
-import { SAMPLE_DUAS } from "./constants";
+import { SAMPLE_DUAS, ARABIC_SCRIPTS } from "./constants";
 import { Spinner, StarIcon } from "./components/icons";
 import useTheme from "./hooks/useTheme";
 import HomeView from "./views/HomeView";
@@ -81,6 +81,13 @@ export default function App() {
   }, []);
 
   useEffect(() => { if (!loading) saveDuas(duas); }, [duas, loading]);
+
+  // Arabic script style → CSS variables used by every Arabic text element
+  useEffect(() => {
+    const script = ARABIC_SCRIPTS[scriptMode] || ARABIC_SCRIPTS.indopak;
+    document.documentElement.style.setProperty("--arabic-font", script.font);
+    document.documentElement.style.setProperty("--arabic-scale", String(script.scale));
+  }, [scriptMode]);
 
   /* ── Form reset ── */
   const resetForm = () => { setTitle(""); setArabic(""); setTranslit(""); setTrans(""); setSelectedTags([]); setSelectedCategory("general"); setScreenshot(null); setExtractError(null); setExtracting(false); setAddMode("screenshot"); };
@@ -217,7 +224,7 @@ export default function App() {
   return (
     <div style={{ minHeight: "100vh", background: T.appBg, color: T.appColor, fontFamily: "'Cormorant Garamond', serif" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Amiri+Quran&family=Lateef:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
         @keyframes fadeIn  { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:translateY(0) } }
         @keyframes spin    { from { transform:rotate(0deg) } to { transform:rotate(360deg) } }
         @keyframes shimmer { 0% { background-position:-200% center } 100% { background-position:200% center } }

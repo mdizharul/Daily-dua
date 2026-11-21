@@ -19,7 +19,7 @@ export default function ReviewView({
             </div>
 
             {/* Arabic */}
-            <p style={{ fontFamily: "'Amiri', serif", fontSize: `${arabicFontSize * 1.2}rem`, lineHeight: 2, color: T.appColor, direction: "rtl", textAlign: "right", margin: "0 0 1rem" }}>{rDua.arabic}</p>
+            <p style={{ fontFamily: "var(--arabic-font)", fontSize: `calc(${arabicFontSize * 1.2}rem * var(--arabic-scale))`, lineHeight: 2, color: T.appColor, direction: "rtl", textAlign: "right", margin: "0 0 1rem" }}>{rDua.arabic}</p>
 
             {/* Title hint */}
             <p style={{ fontSize: "0.75rem", color: T.goldFaint, fontFamily: "'Cormorant Garamond', serif", margin: "0 0 1.2rem", fontStyle: "italic" }}>{rDua.title}</p>

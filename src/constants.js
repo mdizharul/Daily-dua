@@ -26,3 +26,10 @@ export const SAMPLE_DUAS = [
 
 // Legacy — kept for backward compat, but categories are primary now
 export const PRESET_TAGS = ["Morning", "Evening", "Travel", "Meals", "Sleep", "Protection", "Illness", "General"];
+
+// Arabic script styles (Settings → Arabic Script). `scale` evens out the
+// different visual sizes of the fonts so the font-size slider feels the same.
+export const ARABIC_SCRIPTS = {
+  indopak: { label: "Indo-Pak", font: "'Lateef', 'Amiri', serif", scale: 1.3 },
+  uthmani: { label: "Uthmani", font: "'Amiri Quran', 'Amiri', serif", scale: 1 },
+};

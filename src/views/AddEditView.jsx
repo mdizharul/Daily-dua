@@ -102,7 +102,7 @@ export default function AddEditView({
               <div style={{ marginBottom: "1.2rem" }}>
                 <label style={labelStyle}>Paste Arabic Dua Text</label>
                 <textarea rows={4} placeholder={"بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\n\nPaste your Arabic dua here — AI will extract title, transliteration & translation"} value={pasteText} onChange={(e) => setPasteText(e.target.value)}
-                  style={{ ...inputStyle, fontFamily: "'Amiri', serif", fontSize: "1.15rem", direction: "rtl", textAlign: "right", lineHeight: 2 }} />
+                  style={{ ...inputStyle, fontFamily: "var(--arabic-font)", fontSize: "calc(1.15rem * var(--arabic-scale))", direction: "rtl", textAlign: "right", lineHeight: 2 }} />
                 <div style={{ display: "flex", gap: "0.6rem", marginTop: "0.8rem" }}>
                   <button type="button" onClick={() => { setPasteText(""); setView("home"); }}
                     style={{ flex: 1, padding: "0.55rem 1.4rem", background: "transparent", border: `1.5px solid ${T.cardBorder}`, borderRadius: "50px", color: T.goldFaint, cursor: "pointer", fontSize: "0.9rem", fontFamily: "'Cormorant Garamond', serif", fontWeight: 600 }}>
@@ -148,7 +148,7 @@ export default function AddEditView({
         <div style={{ marginBottom: "0.9rem" }}>
           <label style={labelStyle}>Arabic Text</label>
           <textarea rows={3} placeholder="بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ" value={arabic} onChange={(e) => setArabic(e.target.value)}
-            style={{ ...inputStyle, fontFamily: "'Amiri', serif", fontSize: "1.25rem", direction: "rtl", textAlign: "right", lineHeight: 2 }} />
+            style={{ ...inputStyle, fontFamily: "var(--arabic-font)", fontSize: "calc(1.25rem * var(--arabic-scale))", direction: "rtl", textAlign: "right", lineHeight: 2 }} />
           <span style={{ fontSize: "0.7rem", color: T.goldFaint, display: "block", marginTop: "0.2rem" }}>Use new lines to separate sections</span>
         </div>
         <div style={{ marginBottom: "0.9rem" }}>

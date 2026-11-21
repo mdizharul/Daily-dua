@@ -82,8 +82,8 @@ const DuaCard = ({ dua, onStatusChange, onDelete, onEdit, onRecite, onShare, T, 
           <div key={i} style={{ marginBottom: i < aLines.length - 1 ? "0.8rem" : 0 }}>
             {/* Arabic line */}
             <p style={{
-              fontFamily: "'Amiri', 'Noto Nastaliq Urdu', serif",
-              fontSize: `${fontSize * 1.1}rem`,
+              fontFamily: "var(--arabic-font)",
+              fontSize: `calc(${fontSize * 1.1}rem * var(--arabic-scale))`,
               lineHeight: 2.1,
               color: T.arabic,
               textAlign: "center",
@@ -136,7 +136,7 @@ const DuaCard = ({ dua, onStatusChange, onDelete, onEdit, onRecite, onShare, T, 
       {/* ── Collapsed preview ── */}
       {isLong && !expanded && (
         <div style={{ padding: "0.6rem 1.2rem 0", position: "relative", zIndex: 1, textAlign: "center" }}>
-          <p style={{ fontFamily: "'Amiri', serif", fontSize: "1.1rem", color: isLight ? "rgba(26,26,26,0.4)" : isPaper ? "rgba(45,26,0,0.4)" : "rgba(232,220,200,0.45)", direction: "rtl", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <p style={{ fontFamily: "var(--arabic-font)", fontSize: "calc(1.1rem * var(--arabic-scale))", color: isLight ? "rgba(26,26,26,0.4)" : isPaper ? "rgba(45,26,0,0.4)" : "rgba(232,220,200,0.45)", direction: "rtl", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {aLines[0]}...
           </p>
           <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "0.78rem", color: T.goldFaint, margin: "0.3rem 0 0" }}>

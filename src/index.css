@@ -36,3 +36,9 @@ h2 {
 p {
   margin: 0;
 }
+
+/* Arabic script — overwritten from Settings → Arabic Script (see App.jsx) */
+:root {
+  --arabic-font: 'Lateef', 'Amiri', serif;
+  --arabic-scale: 1.3;
+}

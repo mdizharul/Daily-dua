@@ -33,7 +33,11 @@ export default async function shareAsImage(dua, paper) {
 
   let y = 80;
   // Arabic
-  ctx.font = "22px 'Amiri', serif";
+  // Same Arabic font as the app (Settings → Arabic Script), set as CSS variables in App.jsx
+  const rootStyle = getComputedStyle(document.documentElement);
+  const arabicFont = rootStyle.getPropertyValue("--arabic-font").trim() || "'Amiri', serif";
+  const arabicScale = parseFloat(rootStyle.getPropertyValue("--arabic-scale")) || 1;
+  ctx.font = `${Math.round(22 * arabicScale)}px ${arabicFont}`;
   ctx.fillStyle = paper ? "#2d1a00" : "#e8dcc8";
   ctx.textAlign = "right"; ctx.direction = "rtl";
   aLines.forEach(line => { ctx.fillText(line, W - PAD, y); y += 54; });

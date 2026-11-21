@@ -48,7 +48,7 @@ export default function SettingsView({
         <div style={{ padding: "0.7rem 0.9rem", background: T.inputBg, borderRadius: "10px", border: `1px solid ${T.cardBorder}`, marginBottom: "1rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
             <p style={{ margin: 0, fontSize: "0.9rem", fontWeight: 600, color: T.gold }}>🔤 Arabic Font Size</p>
-            <span style={{ fontFamily: "'Amiri', serif", fontSize: `${arabicFontSize}rem`, color: T.gold, lineHeight: 1 }}>ب</span>
+            <span style={{ fontFamily: "var(--arabic-font)", fontSize: `calc(${arabicFontSize}rem * var(--arabic-scale))`, color: T.gold, lineHeight: 1 }}>ب</span>
           </div>
           <input type="range" min="0.9" max="2.0" step="0.1" value={arabicFontSize}
             onChange={e => { const v = parseFloat(e.target.value); setArabicFontSize(v); saveFontSize(v); }}
