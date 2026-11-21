@@ -1,7 +1,38 @@
 import { useRef, useState } from "react";
-import { CATEGORIES, CATEGORY_MAP } from "../constants";
-import { Spinner } from "../components/icons";
+import { CATEGORIES } from "../constants";
+import { T, FONT, card, chip, column, h1, iconButton, input, label, page, primaryButton, secondaryButton, segOption, segTrack } from "../theme/tokens";
+import { BackIcon } from "../library/icons";
 
+const Spinner = ({ size = 16 }) => (
+  <span
+    aria-hidden="true"
+    style={{ width: size, height: size, border: `2px solid ${T.accentSoft}`, borderTopColor: T.accent, borderRadius: "50%", animation: "spin 0.9s linear infinite", display: "inline-block", flexShrink: 0 }}
+  />
+);
+
+const Notice = ({ tone = "info", title, children }) => (
+  <div
+    role={tone === "error" ? "alert" : "status"}
+    style={{
+      display: "flex",
+      alignItems: "flex-start",
+      gap: "10px",
+      padding: "12px 14px",
+      borderRadius: "14px",
+      background: tone === "error" ? T.dangerBg : T.accentTint,
+      color: tone === "error" ? T.danger : T.text,
+      fontSize: "13px",
+    }}
+  >
+    {tone === "info" ? <Spinner /> : <span aria-hidden="true">⚠️</span>}
+    <span style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+      {title && <strong style={{ fontWeight: 600 }}>{title}</strong>}
+      <span style={{ color: tone === "error" ? T.danger : T.muted }}>{children}</span>
+    </span>
+  </div>
+);
+
+/** Add a dua (photo, screenshot, pasted text or typed) or edit one. */
 export default function AddEditView({
   editIdx,
   title, setTitle, arabic, setArabic, translit, setTranslit, translation, setTrans,
@@ -10,185 +41,158 @@ export default function AddEditView({
   screenshot, setScreenshot,
   extracting, extractError,
   fileRef, handleScreenshot, handlePasteExtract, handleSave,
-  setView, T, themeMode,
+  onBack,
 }) {
   const [pasteText, setPasteText] = useState("");
   const cameraRef = useRef(null);
+  const editing = editIdx !== null;
+  const canSave = arabic.trim() && !extracting;
 
-  const inputStyle = { width: "100%", padding: "0.8rem 1rem", background: T.inputBg, border: `1px solid ${T.inputBorder}`, borderRadius: "12px", color: T.appColor, fontSize: "0.95rem", fontFamily: "var(--font-ui)", outline: "none", resize: "vertical", boxSizing: "border-box" };
-  const labelStyle = { display: "block", fontFamily: "var(--font-ui)", fontSize: "0.82rem", fontWeight: 600, color: T.gold, marginBottom: "0.35rem", letterSpacing: "1px", textTransform: "uppercase" };
-  const btnStyle   = { background: T.btnBg, border: `1px solid ${T.btnBorder}`, borderRadius: "8px", padding: "0.22rem 0.55rem", color: T.btnText, cursor: "pointer", fontSize: "0.7rem", fontFamily: "var(--font-ui)" };
+  const pick = (ref) => {
+    if (!ref.current) return;
+    ref.current.value = "";
+    ref.current.click();
+  };
+
+  const arabicInput = { ...input, fontFamily: "var(--arabic-font)", fontSize: "calc(20px * var(--arabic-scale))", direction: "rtl", textAlign: "right", lineHeight: 1.9 };
 
   return (
-    <div style={{ animation: "fadeIn 0.3s ease-out" }}>
-      <div style={{ background: T.cardBg, borderRadius: "20px", border: `1px solid ${T.cardBorder}`, padding: "1.3rem" }}>
-        <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.2rem", fontWeight: 600, color: T.gold, margin: "0 0 1rem" }}>
-          {editIdx !== null ? "Edit Dua" : "Add New Dua"}
-        </h2>
+    <div style={page}>
+      <div style={{ ...column, gap: "16px" }}>
+        <header style={{ display: "flex", alignItems: "center", gap: "12px", paddingTop: "8px" }}>
+          <button type="button" aria-label="Back" onClick={onBack} style={iconButton}>
+            <BackIcon />
+          </button>
+          <h1 style={{ ...h1, fontSize: "24px" }}>{editing ? "Edit dua" : "Add a dua"}</h1>
+        </header>
 
-        {/* Screenshot / mode section */}
-        {editIdx === null && (
+        {!editing && (
           <>
-            {/* Mode switcher — 2 tabs: Screenshot + Paste */}
-            <div style={{ display: "flex", gap: "0.4rem", marginBottom: "1rem", padding: "0.25rem", background: T.inputBg, borderRadius: "30px", border: `1px solid ${T.cardBorder}` }}>
-              {[{ id: "screenshot", icon: "📷", label: "Screenshot" }, { id: "paste", icon: "📋", label: "Paste" }].map(({ id, icon, label }) => (
-                <button key={id} onClick={() => setAddMode(id)}
-                  style={{ flex: 1, padding: "0.4rem", background: addMode === id ? T.btnBg : "transparent", border: "none", borderRadius: "24px", color: addMode === id ? T.gold : T.goldFaint, cursor: "pointer", fontSize: "0.78rem", fontFamily: "var(--font-ui)", fontWeight: addMode === id ? 600 : 400, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.3rem", transition: "all 0.2s" }}>
-                  {icon} {label}
+            <div role="tablist" aria-label="How to add" style={segTrack(2)}>
+              {[
+                ["screenshot", "📷 Photo / screenshot"],
+                ["paste", "📋 Paste text"],
+              ].map(([id, text]) => (
+                <button key={id} type="button" role="tab" aria-selected={addMode === id} onClick={() => setAddMode(id)} style={{ ...segOption(addMode === id), fontSize: "13px" }}>
+                  {text}
                 </button>
               ))}
             </div>
 
-            {/* Screenshot upload */}
             {addMode === "screenshot" && (
-              <div style={{ marginBottom: "1.2rem" }}>
-                <label style={labelStyle}>Photo or screenshot (auto-extracts dua)</label>
+              <section style={{ ...card, display: "flex", flexDirection: "column", gap: "12px" }}>
                 <input ref={fileRef} type="file" accept="image/*" onChange={handleScreenshot} style={{ display: "none" }} />
                 {/* capture="environment" opens the back camera directly on phones */}
                 <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handleScreenshot} style={{ display: "none" }} />
 
                 {!screenshot ? (
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", padding: "1.8rem 1rem", background: T.inputBg, border: `1.5px dashed ${T.inputBorder}`, borderRadius: "18px" }}>
-                    <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: T.btnBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
-                      </svg>
-                    </div>
-                    <p style={{ margin: 0, fontSize: "0.85rem", color: T.goldFaint, textAlign: "center" }}>
-                      Take a photo of a dua (book, poster, wall) or upload a screenshot<br />
-                      <span style={{ fontSize: "0.72rem" }}>AI extracts Arabic, transliteration & translation</span>
-                    </p>
-                    <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap", justifyContent: "center" }}>
-                      <button type="button" onClick={() => setView("home")}
-                        style={{ padding: "0.55rem 1.4rem", background: "transparent", border: `1.5px solid ${T.cardBorder}`, borderRadius: "50px", color: T.goldFaint, cursor: "pointer", fontSize: "0.9rem", fontFamily: "'Cormorant Garamond', serif", fontWeight: 600 }}>
-                        Cancel
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", padding: "20px 8px", border: `1.5px dashed ${T.border}`, borderRadius: "18px", textAlign: "center" }}>
+                    <span aria-hidden="true" style={{ width: "56px", height: "56px", borderRadius: "999px", background: T.accentTint, color: T.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px" }}>
+                      📷
+                    </span>
+                    <span style={{ fontSize: "15px", fontWeight: 600 }}>Photo of a dua, or a screenshot</span>
+                    <span style={{ fontSize: "13px", color: T.muted, maxWidth: "300px" }}>
+                      Book, poster, wall or an Instagram / YouTube screenshot. AI reads the Arabic, transliteration and meaning.
+                    </span>
+                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center", width: "100%" }}>
+                      <button type="button" onClick={() => pick(cameraRef)} style={{ ...primaryButton(true), width: "auto", flex: "1 1 140px", height: "48px", fontSize: "15px" }}>
+                        Take photo
                       </button>
-                      <button type="button" onClick={() => { if(fileRef.current) { fileRef.current.value = ""; fileRef.current.click(); } }}
-                        style={{ padding: "0.55rem 1.6rem", background: T.ctaBg, border: "none", borderRadius: "50px", color: T.ctaColor, cursor: "pointer", fontSize: "0.9rem", fontFamily: "'Cormorant Garamond', serif", fontWeight: 700, boxShadow: T.ctaShadow }}>
-                        Upload
-                      </button>
-                      <button type="button" onClick={() => { if (cameraRef.current) { cameraRef.current.value = ""; cameraRef.current.click(); } }}
-                        style={{ padding: "0.55rem 1.4rem", background: T.ctaBg, border: "none", borderRadius: "50px", color: T.ctaColor, cursor: "pointer", fontSize: "0.9rem", fontFamily: "'Cormorant Garamond', serif", fontWeight: 700, boxShadow: T.ctaShadow, minHeight: "40px" }}>
-                        📷 Take photo
+                      <button type="button" onClick={() => pick(fileRef)} style={{ ...secondaryButton, flex: "1 1 140px" }}>
+                        Choose image
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div style={{ background: themeMode === "dark" ? "rgba(0,0,0,0.3)" : T.inputBg, borderRadius: "14px", border: `1px solid ${T.cardBorder}`, overflow: "hidden" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.5rem 0.8rem", background: T.btnBg, borderBottom: `1px solid ${T.cardBorder}` }}>
-                      <span style={{ fontSize: "0.78rem", color: T.gold, fontWeight: 600 }}>{extracting ? "🔍 Extracting..." : "📷 Reference"}</span>
-                      <div style={{ display: "flex", gap: "0.3rem" }}>
-                        <button onClick={() => { setScreenshot(null); if(fileRef.current) { fileRef.current.value=""; fileRef.current.click(); } }} style={btnStyle}>Re-upload</button>
-                        <button onClick={() => { setScreenshot(null); if(fileRef.current) fileRef.current.value=""; }} style={{ ...btnStyle, color: "rgba(200,100,100,0.6)" }}>Remove</button>
-                      </div>
+                  <div style={{ borderRadius: "16px", border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", padding: "8px 12px", background: T.divider }}>
+                      <span style={{ fontSize: "13px", fontWeight: 600 }}>{extracting ? "Reading…" : "Your image"}</span>
+                      <span style={{ display: "flex", gap: "6px" }}>
+                        <button type="button" onClick={() => { setScreenshot(null); pick(fileRef); }} style={{ ...secondaryButton, height: "36px", padding: "0 12px", fontSize: "13px" }}>
+                          Change
+                        </button>
+                        <button type="button" onClick={() => { setScreenshot(null); if (fileRef.current) fileRef.current.value = ""; }} style={{ ...secondaryButton, height: "36px", padding: "0 12px", fontSize: "13px", color: T.danger }}>
+                          Remove
+                        </button>
+                      </span>
                     </div>
-                    <img src={screenshot} alt="Dua" style={{ width: "100%", display: "block", objectFit: "contain", maxHeight: "300px", background: "#000" }} />
+                    <img src={screenshot} alt="The dua you added" style={{ width: "100%", display: "block", objectFit: "contain", maxHeight: "300px", background: "#000" }} />
                   </div>
                 )}
 
-                {extracting && (
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.8rem", marginTop: "0.6rem", background: T.inputBg, borderRadius: "10px", border: `1px solid ${T.cardBorder}` }}>
-                    <Spinner size={16} inline />
-                    <div>
-                      <p style={{ margin: 0, fontSize: "0.85rem", color: T.gold }}>AI is reading your image...</p>
-                      <p style={{ margin: "0.1rem 0 0", fontSize: "0.72rem", color: T.goldFaint }}>Extracting Arabic, transliteration & translation</p>
-                    </div>
-                  </div>
-                )}
-                {extractError && (
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem", padding: "0.75rem", marginTop: "0.6rem", background: "rgba(220,60,60,0.08)", borderRadius: "10px", border: "1px solid rgba(220,60,60,0.2)" }}>
-                    <span style={{ fontSize: "1rem", flexShrink: 0 }}>⚠️</span>
-                    <p style={{ fontSize: "0.82rem", color: "#e88", margin: 0 }}>{extractError}</p>
-                  </div>
-                )}
-              </div>
+                {extracting && <Notice title="AI is reading your image…">Extracting Arabic, transliteration and meaning</Notice>}
+                {extractError && <Notice tone="error">{extractError}</Notice>}
+              </section>
             )}
 
-            {/* Paste mode */}
             {addMode === "paste" && (
-              <div style={{ marginBottom: "1.2rem" }}>
-                <label style={labelStyle}>Paste Arabic Dua Text</label>
-                <textarea rows={4} placeholder={"بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\n\nPaste your Arabic dua here — AI will extract title, transliteration & translation"} value={pasteText} onChange={(e) => setPasteText(e.target.value)}
-                  style={{ ...inputStyle, fontFamily: "var(--arabic-font)", fontSize: "calc(1.15rem * var(--arabic-scale))", direction: "rtl", textAlign: "right", lineHeight: 2 }} />
-                <div style={{ display: "flex", gap: "0.6rem", marginTop: "0.8rem" }}>
-                  <button type="button" onClick={() => { setPasteText(""); setView("home"); }}
-                    style={{ flex: 1, padding: "0.55rem 1.4rem", background: "transparent", border: `1.5px solid ${T.cardBorder}`, borderRadius: "50px", color: T.goldFaint, cursor: "pointer", fontSize: "0.9rem", fontFamily: "'Cormorant Garamond', serif", fontWeight: 600 }}>
-                    Cancel
-                  </button>
-                  <button type="button" disabled={!pasteText.trim() || extracting} onClick={() => handlePasteExtract(pasteText)}
-                    style={{ flex: 1, padding: "0.55rem 1.6rem", background: pasteText.trim() && !extracting ? T.ctaBg : T.btnBg, border: "none", borderRadius: "50px", color: pasteText.trim() && !extracting ? T.ctaColor : T.goldFaint, cursor: pasteText.trim() && !extracting ? "pointer" : "not-allowed", fontSize: "0.9rem", fontFamily: "'Cormorant Garamond', serif", fontWeight: 700, boxShadow: pasteText.trim() && !extracting ? T.ctaShadow : "none", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.4rem" }}>
-                    {extracting ? <><Spinner size={14} inline /> Extracting...</> : "✨ Extract with AI"}
-                  </button>
-                </div>
-                {extracting && (
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.8rem", marginTop: "0.6rem", background: T.inputBg, borderRadius: "10px", border: `1px solid ${T.cardBorder}` }}>
-                    <Spinner size={16} inline />
-                    <div>
-                      <p style={{ margin: 0, fontSize: "0.85rem", color: T.gold }}>AI is analyzing your dua...</p>
-                      <p style={{ margin: "0.1rem 0 0", fontSize: "0.72rem", color: T.goldFaint }}>Generating title, transliteration & translation</p>
-                    </div>
-                  </div>
-                )}
-                {extractError && (
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem", padding: "0.75rem", marginTop: "0.6rem", background: "rgba(220,60,60,0.08)", borderRadius: "10px", border: "1px solid rgba(220,60,60,0.2)" }}>
-                    <span style={{ fontSize: "1rem", flexShrink: 0 }}>⚠️</span>
-                    <p style={{ fontSize: "0.82rem", color: "#e88", margin: 0 }}>{extractError}</p>
-                  </div>
-                )}
-              </div>
+              <section style={{ ...card, display: "flex", flexDirection: "column", gap: "12px" }}>
+                <label style={{ ...label, marginBottom: 0 }} htmlFor="paste-arabic">
+                  Paste the Arabic dua
+                </label>
+                <textarea
+                  id="paste-arabic"
+                  rows={4}
+                  placeholder="بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"
+                  value={pasteText}
+                  onChange={(e) => setPasteText(e.target.value)}
+                  style={arabicInput}
+                />
+                <button type="button" disabled={!pasteText.trim() || extracting} onClick={() => handlePasteExtract(pasteText)} style={{ ...primaryButton(pasteText.trim() && !extracting), display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                  {extracting ? (
+                    <>
+                      <Spinner /> Extracting…
+                    </>
+                  ) : (
+                    "✨ Extract with AI"
+                  )}
+                </button>
+                {extractError && <Notice tone="error">{extractError}</Notice>}
+              </section>
             )}
 
-            {editIdx === null && addMode === "screenshot" && !screenshot && (
-              <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", margin: "0.3rem 0 1rem" }}>
-                <div style={{ flex: 1, height: "1px", background: T.cardBorder }} />
-                <span style={{ fontSize: "0.72rem", color: T.goldFaint, letterSpacing: "2px" }}>OR FILL MANUALLY</span>
-                <div style={{ flex: 1, height: "1px", background: T.cardBorder }} />
-              </div>
-            )}
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", color: T.muted, fontSize: "12px", fontWeight: 600 }}>
+              <span style={{ flex: 1, height: "1px", background: T.border }} />
+              {screenshot || pasteText ? "Check and edit" : "Or type it yourself"}
+              <span style={{ flex: 1, height: "1px", background: T.border }} />
+            </div>
           </>
         )}
 
-        <div style={{ marginBottom: "0.9rem" }}>
-          <label style={labelStyle}>Title</label>
-          <input type="text" placeholder="e.g. Dua Before Sleeping" value={title} onChange={(e) => setTitle(e.target.value)} style={inputStyle} />
-        </div>
-        <div style={{ marginBottom: "0.9rem" }}>
-          <label style={labelStyle}>Arabic Text</label>
-          <textarea rows={3} placeholder="بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ" value={arabic} onChange={(e) => setArabic(e.target.value)}
-            style={{ ...inputStyle, fontFamily: "var(--arabic-font)", fontSize: "calc(1.25rem * var(--arabic-scale))", direction: "rtl", textAlign: "right", lineHeight: 2 }} />
-          <span style={{ fontSize: "0.7rem", color: T.goldFaint, display: "block", marginTop: "0.2rem" }}>Use new lines to separate sections</span>
-        </div>
-        <div style={{ marginBottom: "0.9rem" }}>
-          <label style={labelStyle}>Transliteration (Roman Urdu)</label>
-          <textarea rows={3} placeholder="Bismillahir Rahmanir Raheem" value={translit} onChange={(e) => setTranslit(e.target.value)} style={{ ...inputStyle, fontStyle: "italic" }} />
-        </div>
-        <div style={{ marginBottom: "1.2rem" }}>
-          <label style={labelStyle}>Translation (Roman Urdu)</label>
-          <textarea rows={3} placeholder="Allah ke naam se jo bara meherbaan hai" value={translation} onChange={(e) => setTrans(e.target.value)} style={inputStyle} />
-        </div>
-
-        {/* Category picker */}
-        <div style={{ marginBottom: "1.2rem" }}>
-          <label style={labelStyle}>Category</label>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
-            {CATEGORIES.map(cat => {
-              const active = selectedCategory === cat.id;
-              return (
-                <button key={cat.id} type="button" onClick={() => setSelectedCategory(cat.id)}
-                  style={{ background: active ? T.btnBg : "transparent", border: `1px solid ${active ? T.gold : T.cardBorder}`, borderRadius: "20px", padding: "0.25rem 0.75rem", color: active ? T.gold : T.goldFaint, cursor: "pointer", fontSize: "0.78rem", fontFamily: "var(--font-ui)", fontWeight: active ? 600 : 400, transition: "all 0.15s", display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                  <span style={{ fontSize: "0.75rem" }}>{cat.icon}</span> {cat.label}
-                </button>
-              );
-            })}
+        <section style={{ ...card, display: "flex", flexDirection: "column", gap: "14px" }}>
+          <div>
+            <label style={label} htmlFor="dua-title">Title</label>
+            <input id="dua-title" type="text" placeholder="e.g. Dua before sleeping" value={title} onChange={(e) => setTitle(e.target.value)} style={input} />
           </div>
-          <span style={{ fontSize: "0.65rem", color: T.goldFaint, display: "block", marginTop: "0.3rem" }}>
-            AI auto-selects category — you can change it here
-          </span>
-        </div>
+          <div>
+            <label style={label} htmlFor="dua-arabic">Arabic</label>
+            <textarea id="dua-arabic" rows={3} placeholder="بِسْمِ اللَّهِ" value={arabic} onChange={(e) => setArabic(e.target.value)} style={arabicInput} />
+            <span style={{ fontSize: "12px", color: T.muted }}>Start a new line for each part of the dua</span>
+          </div>
+          <div>
+            <label style={label} htmlFor="dua-translit">Transliteration</label>
+            <textarea id="dua-translit" rows={3} placeholder="Bismillahir Rahmanir Raheem" value={translit} onChange={(e) => setTranslit(e.target.value)} style={{ ...input, fontStyle: "italic" }} />
+          </div>
+          <div>
+            <label style={label} htmlFor="dua-meaning">Meaning (Matlab)</label>
+            <textarea id="dua-meaning" rows={3} placeholder="Allah ke naam se…" value={translation} onChange={(e) => setTrans(e.target.value)} style={input} />
+          </div>
+        </section>
 
-        <button onClick={handleSave} disabled={!arabic.trim() || extracting}
-          style={{ width: "100%", padding: "0.9rem", background: arabic.trim() && !extracting ? T.ctaBg : T.btnBg, border: "none", borderRadius: "50px", color: arabic.trim() && !extracting ? T.ctaColor : T.goldFaint, cursor: arabic.trim() && !extracting ? "pointer" : "not-allowed", fontSize: "1rem", fontFamily: "'Cormorant Garamond', serif", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", boxShadow: arabic.trim() && !extracting ? T.ctaShadow : "none" }}>
-          {editIdx !== null ? "Update Dua" : "Save Dua"}
+        <section style={{ ...card, display: "flex", flexDirection: "column", gap: "10px" }}>
+          <span style={{ ...label, marginBottom: 0 }}>Category</span>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            {CATEGORIES.map((cat) => (
+              <button key={cat.id} type="button" aria-pressed={selectedCategory === cat.id} onClick={() => setSelectedCategory(cat.id)} style={chip(selectedCategory === cat.id)}>
+                {cat.icon} {cat.label}
+              </button>
+            ))}
+          </div>
+          <span style={{ fontSize: "12px", color: T.muted, fontFamily: FONT }}>AI picks one for you — change it if needed</span>
+        </section>
+
+        <button type="button" onClick={handleSave} disabled={!canSave} style={primaryButton(Boolean(canSave))}>
+          {editing ? "Save changes" : "Save dua"}
         </button>
       </div>
     </div>

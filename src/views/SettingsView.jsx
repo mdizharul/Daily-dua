@@ -1,88 +1,159 @@
 import { saveTajweedMode, saveFontSize, saveDuas } from "../services/storage";
 import { TAJWEED_LEGEND } from "../utils/tajweed";
+import { T, FONT, card, column, h1, h2, iconButton, page, secondaryButton, segOption, segTrack } from "../theme/tokens";
+import { BackIcon } from "../library/icons";
+
+const Row = ({ title, hint, children, last }) => (
+  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", padding: "12px 0", borderBottom: last ? "none" : `1px solid ${T.divider}` }}>
+    <span style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+      <span style={{ fontSize: "14px", fontWeight: 600 }}>{title}</span>
+      {hint && <span style={{ fontSize: "12px", color: T.muted }}>{hint}</span>}
+    </span>
+    {children}
+  </div>
+);
+
+const Switch = ({ on, onChange, label }) => (
+  <button
+    type="button"
+    role="switch"
+    aria-checked={on}
+    aria-label={label}
+    onClick={() => onChange(!on)}
+    style={{ width: "50px", height: "30px", borderRadius: "999px", background: on ? T.accent : T.radioOff, border: "none", cursor: "pointer", position: "relative", flexShrink: 0, transition: "background 0.2s" }}
+  >
+    <span style={{ position: "absolute", top: "3px", left: on ? "23px" : "3px", width: "24px", height: "24px", borderRadius: "999px", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.3)", transition: "left 0.2s" }} />
+  </button>
+);
 
 export default function SettingsView({
   duas, setDuas, tajweedMode, setTajweedMode,
   arabicFontSize, setArabicFontSize, scriptMode, setScriptMode,
-  importRef, handleImport, T,
+  themeMode, setThemeMode,
+  importRef, handleImport, onBack,
 }) {
-  const btnStyle = { background: T.btnBg, border: `1px solid ${T.btnBorder}`, borderRadius: "8px", padding: "0.22rem 0.55rem", color: T.btnText, cursor: "pointer", fontSize: "0.7rem", fontFamily: "var(--font-ui)" };
+  const exportBackup = () => {
+    const blob = new Blob([JSON.stringify(duas, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "daily-dua-backup.json";
+    a.click();
+  };
 
   return (
-    <div style={{ animation: "fadeIn 0.3s ease-out" }}>
-      <div style={{ background: T.cardBg, borderRadius: "20px", border: `1px solid ${T.cardBorder}`, padding: "1.3rem" }}>
-        <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.2rem", fontWeight: 600, color: T.gold, margin: "0 0 1rem" }}>Settings</h2>
+    <div style={page}>
+      <div style={{ ...column, gap: "16px" }}>
+        <header style={{ display: "flex", alignItems: "center", gap: "12px", paddingTop: "8px" }}>
+          <button type="button" aria-label="Back" onClick={onBack} style={iconButton}>
+            <BackIcon />
+          </button>
+          <h1 style={{ ...h1, fontSize: "24px" }}>Settings</h1>
+        </header>
 
-        {/* Script toggle */}
-        <div style={{ padding: "0.7rem 0.9rem", background: T.inputBg, borderRadius: "10px", border: `1px solid ${T.cardBorder}`, marginBottom: "1rem" }}>
-          <p style={{ margin: "0 0 0.4rem", fontSize: "0.9rem", fontWeight: 600, color: T.gold }}>📜 Arabic Script</p>
-          <p style={{ margin: "0 0 0.5rem", fontSize: "0.72rem", color: T.goldFaint }}>Choose the Arabic font style for your duas</p>
-          <div style={{ display: "flex", gap: "0.4rem", padding: "0.2rem", background: T.btnBg, borderRadius: "24px" }}>
+        <section style={{ ...card, display: "flex", flexDirection: "column", gap: "12px" }}>
+          <h2 style={h2}>Appearance</h2>
+          <div role="radiogroup" aria-label="Appearance" style={segTrack(2)}>
             {[
-              { id: "indopak", label: "Indo-Pak", desc: "Default for subcontinent" },
-              { id: "uthmani", label: "Uthmani", desc: "Medina Mushaf style" },
-            ].map(({ id, label }) => {
-              const active = scriptMode === id;
-              return (
-                <button key={id} onClick={() => setScriptMode(id)}
-                  style={{ flex: 1, padding: "0.4rem 0.6rem", background: active ? T.cardBg : "transparent", border: active ? `1px solid ${T.gold}` : "1px solid transparent", borderRadius: "20px", color: active ? T.gold : T.goldFaint, cursor: "pointer", fontSize: "0.78rem", fontFamily: "var(--font-ui)", fontWeight: active ? 600 : 400, transition: "all 0.2s" }}>
-                  {label}
-                </button>
-              );
-            })}
+              ["day", "☀ Day"],
+              ["night", "☾ Night"],
+            ].map(([id, text]) => (
+              <button key={id} type="button" role="radio" aria-checked={themeMode === id} onClick={() => setThemeMode(id)} style={segOption(themeMode === id)}>
+                {text}
+              </button>
+            ))}
           </div>
-        </div>
+        </section>
 
-        {/* Tajweed mode toggle */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.7rem 0.9rem", background: tajweedMode ? "rgba(155,89,182,0.07)" : T.inputBg, borderRadius: "10px", border: `1px solid ${tajweedMode ? "rgba(155,89,182,0.25)" : T.cardBorder}`, marginBottom: "1rem" }}>
+        <section style={{ ...card, display: "flex", flexDirection: "column", gap: "12px" }}>
+          <h2 style={h2}>Arabic</h2>
           <div>
-            <p style={{ margin: 0, fontSize: "0.9rem", fontWeight: 600, color: tajweedMode ? "#9b59b6" : T.gold }}>🎨 Tajweed Markers</p>
-            <p style={{ margin: "0.1rem 0 0", fontSize: "0.72rem", color: T.goldFaint }}>Subtle underlines: Ghunna · Qalqalah · Madd</p>
+            <span style={{ fontSize: "13px", color: T.muted }}>Script style</span>
+            <div role="radiogroup" aria-label="Arabic script" style={{ ...segTrack(2), marginTop: "6px" }}>
+              {[
+                ["indopak", "Indo-Pak"],
+                ["uthmani", "Uthmani"],
+              ].map(([id, text]) => (
+                <button key={id} type="button" role="radio" aria-checked={scriptMode === id} onClick={() => setScriptMode(id)} style={segOption(scriptMode === id)}>
+                  {text}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "13px", color: T.muted }}>Text size</span>
+              <span lang="ar" style={{ fontFamily: "var(--arabic-font)", fontSize: `calc(${arabicFontSize}rem * var(--arabic-scale))`, color: T.accent, lineHeight: 1 }}>
+                بِسْمِ
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0.9"
+              max="2.0"
+              step="0.1"
+              aria-label="Arabic text size"
+              value={arabicFontSize}
+              onChange={(e) => {
+                const v = parseFloat(e.target.value);
+                setArabicFontSize(v);
+                saveFontSize(v);
+              }}
+              style={{ width: "100%", accentColor: "var(--accent)", cursor: "pointer", height: "32px" }}
+            />
+          </div>
+
+          <div style={{ borderTop: `1px solid ${T.divider}` }}>
+            <Row title="Tajweed markers" hint="Subtle underlines on key letters">
+              <Switch
+                label="Tajweed markers"
+                on={tajweedMode}
+                onChange={(next) => {
+                  setTajweedMode(next);
+                  saveTajweedMode(next);
+                }}
+              />
+            </Row>
             {tajweedMode && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem 0.8rem", marginTop: "0.4rem" }}>
-                {TAJWEED_LEGEND.map(({ label, color, desc }) => (
-                  <span key={label} style={{ fontSize: "0.68rem", color, display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                    <span style={{ fontFamily: "var(--arabic-font)", fontSize: "calc(0.85rem * var(--arabic-scale))" }}>{desc}</span>
-                    {label}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px", paddingTop: "4px" }}>
+                {TAJWEED_LEGEND.map(({ label: name, color, desc }) => (
+                  <span key={name} style={{ fontSize: "12px", color, display: "flex", alignItems: "center", gap: "6px", fontWeight: 600 }}>
+                    <span lang="ar" style={{ fontFamily: "var(--arabic-font)", fontSize: "calc(15px * var(--arabic-scale))" }}>{desc}</span>
+                    {name}
                   </span>
                 ))}
               </div>
             )}
           </div>
-          <button onClick={() => { const next = !tajweedMode; setTajweedMode(next); saveTajweedMode(next); }}
-            style={{ width: "44px", height: "24px", borderRadius: "12px", background: tajweedMode ? "#9b59b6" : T.btnBg, border: "none", cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
-            <div style={{ width: "18px", height: "18px", borderRadius: "50%", background: "#fff", position: "absolute", top: "3px", left: tajweedMode ? "23px" : "3px", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
+        </section>
+
+        <section style={{ ...card, display: "flex", flexDirection: "column", gap: "12px" }}>
+          <h2 style={h2}>Your data</h2>
+          <span style={{ fontSize: "13px", color: T.muted }}>
+            {duas.length} {duas.length === 1 ? "dua" : "duas"} saved on this device. Back up before changing phones.
+          </span>
+          <input ref={importRef} type="file" accept=".json" onChange={handleImport} style={{ display: "none" }} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+            <button type="button" onClick={exportBackup} style={secondaryButton}>
+              Export backup
+            </button>
+            <button type="button" onClick={() => importRef.current?.click()} style={secondaryButton}>
+              Import backup
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (confirm("Delete ALL duas on this device? This cannot be undone.")) {
+                setDuas([]);
+                saveDuas([]);
+              }
+            }}
+            style={{ ...secondaryButton, color: T.danger, borderColor: T.danger, fontFamily: FONT }}
+          >
+            Delete all duas
           </button>
-        </div>
-
-        {/* Font size slider */}
-        <div style={{ padding: "0.7rem 0.9rem", background: T.inputBg, borderRadius: "10px", border: `1px solid ${T.cardBorder}`, marginBottom: "1rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
-            <p style={{ margin: 0, fontSize: "0.9rem", fontWeight: 600, color: T.gold }}>🔤 Arabic Font Size</p>
-            <span style={{ fontFamily: "var(--arabic-font)", fontSize: `calc(${arabicFontSize}rem * var(--arabic-scale))`, color: T.gold, lineHeight: 1 }}>ب</span>
-          </div>
-          <input type="range" min="0.9" max="2.0" step="0.1" value={arabicFontSize}
-            onChange={e => { const v = parseFloat(e.target.value); setArabicFontSize(v); saveFontSize(v); }}
-            style={{ width: "100%", accentColor: T.gold, cursor: "pointer" }} />
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.65rem", color: T.goldFaint, marginTop: "0.2rem" }}>
-            <span>Small</span><span>Default</span><span>Large</span>
-          </div>
-        </div>
-
-        <div style={{ height: "1px", background: T.cardBorder, margin: "0 0 1rem" }} />
-
-        {/* Data */}
-        <h3 style={{ fontSize: "0.9rem", color: T.gold, margin: "0 0 0.5rem" }}>Data</h3>
-        <p style={{ fontSize: "0.8rem", color: T.goldFaint, margin: "0 0 0.5rem" }}>{duas.length} duas saved locally</p>
-        <input ref={importRef} type="file" accept=".json" onChange={handleImport} style={{ display: "none" }} />
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-          <button onClick={() => { const blob = new Blob([JSON.stringify(duas, null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "daily-dua-backup.json"; a.click(); }}
-            style={{ ...btnStyle, padding: "0.4rem 0.8rem", fontSize: "0.8rem" }}>Export Backup</button>
-          <button onClick={() => importRef.current?.click()}
-            style={{ ...btnStyle, padding: "0.4rem 0.8rem", fontSize: "0.8rem" }}>Import Backup</button>
-          <button onClick={() => { if (confirm("Clear ALL duas? This cannot be undone.")) { setDuas([]); saveDuas([]); } }}
-            style={{ ...btnStyle, padding: "0.4rem 0.8rem", fontSize: "0.8rem", color: "rgba(200,100,100,0.6)", borderColor: "rgba(200,100,100,0.15)" }}>Clear All</button>
-        </div>
+        </section>
       </div>
     </div>
   );

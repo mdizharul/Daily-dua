@@ -1,71 +1,127 @@
-export default async function shareAsImage(dua, paper) {
+// Draws a dua as a shareable image in the app's card style (green card, gold
+// labels) and opens the phone's share sheet, or downloads it on desktop.
+// Long lines are wrapped so nothing runs off the edge.
+
+const W = 600;
+const PAD = 44;
+const MAX_W = W - PAD * 2;
+
+const COLORS = {
+  day: { top: "#1E5A47", bottom: "#12332A" },
+  night: { top: "#173F33", bottom: "#0C1D17" },
+};
+const TEXT = "#F4F8F6";
+const MUTED = "#B7CEC4";
+const GOLD = "#E8C97E";
+const FRAME = "rgba(232,201,126,0.42)";
+
+function wrap(ctx, text, maxWidth) {
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines = [];
+  let line = "";
+  for (const w of words) {
+    const next = line ? `${line} ${w}` : w;
+    if (ctx.measureText(next).width > maxWidth && line) {
+      lines.push(line);
+      line = w;
+    } else line = next;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+const split = (t = "") => t.split("\n").map((l) => l.trim()).filter(Boolean);
+
+export default async function shareAsImage(dua, night = false) {
   await document.fonts.ready;
-  const W = 600, PAD = 36;
-  const aLines  = dua.arabic.split("\n").filter(l => l.trim());
-  const tLines  = (dua.transliteration || "").split("\n").filter(l => l.trim());
-  const trLines = (dua.translation || "").split("\n").filter(l => l.trim());
-  const H = 80 + aLines.length * 54 + (tLines.length ? tLines.length * 24 + 16 : 0) + (trLines.length ? trLines.length * 22 + 8 : 0) + 60;
+  const root = getComputedStyle(document.documentElement);
+  const arabicFont = root.getPropertyValue("--arabic-font").trim() || "'Amiri', serif";
+  const arabicScale = parseFloat(root.getPropertyValue("--arabic-scale")) || 1;
+
+  const fonts = {
+    title: "600 15px 'Inter', sans-serif",
+    arabic: `700 ${Math.round(28 * arabicScale)}px ${arabicFont}`,
+    label: "600 10px 'Inter', sans-serif",
+    translit: "italic 15px 'Inter', sans-serif",
+    meaning: "500 16px 'Inter', sans-serif",
+    footer: "500 11px 'Inter', sans-serif",
+  };
+
+  // Measure and wrap everything first, so the canvas height fits the content.
+  const measure = document.createElement("canvas").getContext("2d");
+  const wrapAll = (lines, font) => {
+    measure.font = font;
+    return lines.flatMap((l) => wrap(measure, l, MAX_W));
+  };
+  const arabic = wrapAll(split(dua.arabic), fonts.arabic);
+  const translit = wrapAll(split(dua.transliteration), fonts.translit);
+  const meaning = wrapAll([split(dua.translation).join(" ")].filter(Boolean), fonts.meaning);
+
+  const ARABIC_LH = Math.round(50 * arabicScale);
+  let H = 96 + arabic.length * ARABIC_LH + 20;
+  if (translit.length) H += 22 + translit.length * 24 + 16;
+  if (meaning.length) H += 22 + meaning.length * 24 + 16;
+  H += 56;
 
   const canvas = document.createElement("canvas");
-  canvas.width = W * 2; canvas.height = H * 2;
+  canvas.width = W * 2;
+  canvas.height = H * 2;
   const ctx = canvas.getContext("2d");
   ctx.scale(2, 2);
 
-  const bgGrad = ctx.createLinearGradient(0, 0, W, H);
-  if (paper) { bgGrad.addColorStop(0, "#faf6ec"); bgGrad.addColorStop(1, "#f3ead5"); }
-  else        { bgGrad.addColorStop(0, "#1a2a1a"); bgGrad.addColorStop(1, "#0f1f14"); }
-  ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, W, H);
-  ctx.strokeStyle = paper ? "rgba(139,94,32,0.3)" : "rgba(201,168,76,0.3)";
-  ctx.lineWidth = 1; ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
+  const c = night ? COLORS.night : COLORS.day;
+  const bg = ctx.createLinearGradient(0, 0, W * 0.6, H);
+  bg.addColorStop(0, c.top);
+  bg.addColorStop(1, c.bottom);
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
 
-  const gold = paper ? "#7a4a00" : "#c9a84c";
-  // Top ornament line
-  ctx.fillStyle = gold; ctx.fillRect(PAD, 14, W - PAD * 2, 0.8);
+  // Inner gold frame, like the dua card in the app
+  ctx.strokeStyle = FRAME;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect?.(14, 14, W - 28, H - 28, 22);
+  if (!ctx.roundRect) ctx.rect(14, 14, W - 28, H - 28);
+  ctx.stroke();
 
-  // Title
-  ctx.font = "600 17px 'Cormorant Garamond', serif";
-  ctx.fillStyle = gold; ctx.textAlign = "left"; ctx.direction = "ltr";
-  ctx.fillText(dua.title, PAD, 46);
+  ctx.textAlign = "center";
+  let y = 58;
+  ctx.font = fonts.title;
+  ctx.fillStyle = GOLD;
+  ctx.direction = "ltr";
+  ctx.fillText(dua.title, W / 2, y);
 
-  // Divider
-  ctx.strokeStyle = paper ? "rgba(139,94,32,0.15)" : "rgba(201,168,76,0.1)";
-  ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(PAD, 56); ctx.lineTo(W - PAD, 56); ctx.stroke();
-
-  let y = 80;
-  // Arabic
-  // Same Arabic font as the app (Settings → Arabic Script), set as CSS variables in App.jsx
-  const rootStyle = getComputedStyle(document.documentElement);
-  const arabicFont = rootStyle.getPropertyValue("--arabic-font").trim() || "'Amiri', serif";
-  const arabicScale = parseFloat(rootStyle.getPropertyValue("--arabic-scale")) || 1;
-  ctx.font = `${Math.round(22 * arabicScale)}px ${arabicFont}`;
-  ctx.fillStyle = paper ? "#2d1a00" : "#e8dcc8";
-  ctx.textAlign = "right"; ctx.direction = "rtl";
-  aLines.forEach(line => { ctx.fillText(line, W - PAD, y); y += 54; });
-
+  y = 96 + ARABIC_LH * 0.55;
+  ctx.font = fonts.arabic;
+  ctx.fillStyle = TEXT;
+  ctx.direction = "rtl";
+  arabic.forEach((line) => {
+    ctx.fillText(line, W / 2, y);
+    y += ARABIC_LH;
+  });
   y += 8;
-  // Transliteration
-  if (tLines.length) {
-    ctx.font = "italic 13px 'Cormorant Garamond', serif";
-    ctx.fillStyle = paper ? "#8b5e00" : "#c9a84c";
-    ctx.textAlign = "left"; ctx.direction = "ltr";
-    tLines.forEach(line => { ctx.fillText(line, PAD, y); y += 24; });
-    y += 8;
-  }
-  // Translation
-  if (trLines.length) {
-    ctx.font = "13px 'Cormorant Garamond', serif";
-    ctx.fillStyle = paper ? "rgba(107,74,0,0.75)" : "rgba(232,220,200,0.6)";
-    ctx.textAlign = "left"; ctx.direction = "ltr";
-    trLines.forEach(line => { ctx.fillText(line, PAD, y); y += 22; });
-    y += 8;
-  }
-  // Footer
-  ctx.strokeStyle = paper ? "rgba(139,94,32,0.15)" : "rgba(201,168,76,0.1)";
-  ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(PAD, H - 28); ctx.lineTo(W - PAD, H - 28); ctx.stroke();
-  ctx.font = "11px 'Cormorant Garamond', serif";
-  ctx.fillStyle = paper ? "rgba(122,74,0,0.4)" : "rgba(201,168,76,0.4)";
-  ctx.textAlign = "center"; ctx.direction = "ltr";
-  ctx.fillText("daily-dua-kappa.vercel.app", W / 2, H - 10);
+  ctx.direction = "ltr";
+
+  const section = (title, lines, font, color) => {
+    if (!lines.length) return;
+    ctx.font = fonts.label;
+    ctx.fillStyle = GOLD;
+    ctx.fillText(title.toUpperCase().split("").join(String.fromCharCode(8202)), W / 2, y);
+    y += 24;
+    ctx.font = font;
+    ctx.fillStyle = color;
+    lines.forEach((line) => {
+      ctx.fillText(line, W / 2, y);
+      y += 24;
+    });
+    y += 16;
+  };
+  section("Transliteration", translit, fonts.translit, TEXT);
+  section("Matlab", meaning, fonts.meaning, MUTED);
+
+  ctx.font = fonts.footer;
+  ctx.fillStyle = MUTED;
+  ctx.fillText("Daily Dua · daily-dua-kappa.vercel.app", W / 2, H - 30);
 
   canvas.toBlob(async (blob) => {
     const file = new File([blob], `${dua.title.replace(/\s+/g, "-")}.png`, { type: "image/png" });
@@ -79,7 +135,10 @@ export default async function shareAsImage(dua, paper) {
       }
     }
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = file.name; a.click();
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file.name;
+    a.click();
     URL.revokeObjectURL(url);
   }, "image/png");
 }

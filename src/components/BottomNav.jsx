@@ -1,4 +1,4 @@
-import { C } from "../istighfar/theme";
+import { T, FONT } from "../theme/tokens";
 import { BeadsIcon, LibraryIcon, MemorizeIcon } from "../library/icons";
 
 const ITEMS = [
@@ -7,16 +7,8 @@ const ITEMS = [
   { id: "istighfar", label: "Dhikr", Icon: BeadsIcon },
 ];
 
-/**
- * App-wide bottom navigation. Library and Memorize use the library palette (L);
- * the Istighfar tab uses the tracker's own green-on-white style.
- */
-export default function BottomNav({ section, onChange, L }) {
-  const colors =
-    section === "istighfar"
-      ? { bg: C.bg, border: C.border, active: C.accent, idle: C.muted }
-      : { bg: L.bg, border: L.border, active: L.text, idle: L.muted };
-
+/** App-wide bottom navigation, same look on every tab. */
+export default function BottomNav({ section, onChange }) {
   return (
     <nav
       aria-label="Main"
@@ -26,8 +18,8 @@ export default function BottomNav({ section, onChange, L }) {
         right: 0,
         bottom: 0,
         zIndex: 50,
-        background: colors.bg,
-        borderTop: `1px solid ${colors.border}`,
+        background: T.bg,
+        borderTop: `1px solid ${T.border}`,
         paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
@@ -50,10 +42,10 @@ export default function BottomNav({ section, onChange, L }) {
                 background: "none",
                 border: "none",
                 cursor: "pointer",
-                fontFamily: "var(--font-ui)",
+                fontFamily: FONT,
                 fontSize: "12px",
                 fontWeight: active ? 600 : 500,
-                color: active ? colors.active : colors.idle,
+                color: active ? T.accent : T.muted,
               }}
             >
               <Icon />

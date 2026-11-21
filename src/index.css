@@ -8,7 +8,7 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #0a1a0e;
+  background: var(--bg);
 }
 
 @media (max-width: 1024px) {
@@ -45,9 +45,94 @@ p {
   display: none;
 }
 
+/* ── Design tokens: one theme for the whole app (the Dhikr look), Day + Night ──
+   Components use these through src/theme/tokens.js. Night is set with
+   <html data-theme="night"> (see hooks/useTheme.js). */
+:root {
+  --bg: #F5F3EC;
+  --card: #FFFFFF;
+  --border: #E3E1D8;
+  --divider: #EEECE5;
+  --text: #14211D;
+  --body: #34433D;
+  --muted: #5B6B65;
+  --accent: #1E6B52;
+  --on-accent: #FFFFFF;
+  --accent-soft: #DCEBE4;
+  --accent-tint: #EEF5F1;
+  --primary: #14211D;          /* strongest buttons (Pocket, I said it right) */
+  --on-primary: #FFFFFF;
+  --ring: #E6EBE7;
+  --bar-light: #C8D9D1;
+  --bar-today: #9CC7B6;
+  --goal-line: #C9CFCB;
+  --legend-line: #8A9792;
+  --radio-off: #B9C2BE;
+  --warm-bg: #FBEFD9;          /* streak, tags, reminders */
+  --warm-text: #6E4A0E;
+  --warm-icon: #B8862F;
+  --hero: #1E5A47;             /* dua card / memorize card */
+  --hero-2: #12332A;
+  --hero-text: #F4F8F6;
+  --hero-muted: #B7CEC4;
+  --hero-accent: #E8C97E;
+  --hero-frame: rgba(232, 201, 126, 0.42);
+  --danger: #B3412E;
+  --danger-bg: #FBE9E5;
+  --shadow: 0 8px 24px rgba(20, 33, 29, 0.16);
+  color-scheme: light;
+}
+
+:root[data-theme="night"] {
+  --bg: #0B100E;
+  --card: #141B18;
+  --border: #25312C;
+  --divider: #1C2521;
+  --text: #E5ECE8;
+  --body: #C5D2CC;
+  --muted: #93A69D;
+  --accent: #52A887;
+  --on-accent: #08110D;
+  --accent-soft: rgba(82, 168, 135, 0.18);
+  --accent-tint: #13231D;
+  --primary: #E5ECE8;
+  --on-primary: #0B100E;
+  --ring: #1F2A25;
+  --bar-light: #2B3B34;
+  --bar-today: #3E8C72;
+  --goal-line: #35443D;
+  --legend-line: #6E8178;
+  --radio-off: #4B5B54;
+  --warm-bg: rgba(224, 178, 90, 0.15);
+  --warm-text: #E8C27A;
+  --warm-icon: #E0B25A;
+  --hero: #173F33;
+  --hero-2: #0C1D17;
+  --hero-text: #F1F6F3;
+  --hero-muted: #A6C0B5;
+  --hero-accent: #E8C97E;
+  --hero-frame: rgba(232, 201, 126, 0.35);
+  --danger: #E58A76;
+  --danger-bg: rgba(229, 138, 118, 0.12);
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 /* Arabic script — overwritten from Settings → Arabic Script (see App.jsx) */
 :root {
-  /* Crisp sans for small UI text (buttons, chips, labels); Cormorant stays for titles */
+  /* App fonts: Inter for text, Space Grotesk for headings and numbers */
   --font-ui: 'Inter', system-ui, sans-serif;
   /* Height of the fixed bottom navigation (components/BottomNav.jsx) */
   --nav-h: calc(68px + env(safe-area-inset-bottom));

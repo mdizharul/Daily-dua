@@ -77,7 +77,7 @@ export default function GoalSettingsScreen({ tracker, onBack }) {
                   borderRadius: "14px",
                   border: `1px solid ${active ? C.accent : C.border}`,
                   background: active ? C.accent : C.card,
-                  color: active ? "#fff" : C.text,
+                  color: active ? C.onAccent : C.text,
                   fontFamily: FONT_NUM,
                   fontSize: "17px",
                   fontWeight: 600,

@@ -74,7 +74,7 @@ export default function MemorizeView({ L, duas, focusId, onResult, onBack, onLib
             </button>
           )}
           <div style={{ display: "flex", flexDirection: "column", gap: "2px", minWidth: 0, flex: 1 }}>
-            <h1 style={{ margin: 0, fontFamily: FONT_SERIF, fontSize: "26px", fontWeight: 400, color: L.text }}>Memorize</h1>
+            <h1 style={{ margin: 0, fontFamily: FONT_SERIF, fontSize: "28px", fontWeight: 700, letterSpacing: "-0.5px", color: L.text }}>Memorize</h1>
             {dua && (
               <span style={{ fontSize: "12px", color: L.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {dua.title} · {categoryLabel(dua)}
@@ -118,7 +118,7 @@ export default function MemorizeView({ L, duas, focusId, onResult, onBack, onLib
             {dua.translation && (
               <section style={{ background: L.card, border: `1px solid ${L.border}`, borderRadius: "20px", padding: "14px 16px", display: "flex", flexDirection: "column", gap: "6px" }}>
                 <span style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "1.2px", textTransform: "uppercase", color: L.tagText }}>Matlab</span>
-                <p style={{ margin: 0, fontFamily: FONT_SERIF, fontSize: "18px", lineHeight: 1.4, color: L.text }}>“{splitLines(dua.translation).join(" ")}”</p>
+                <p style={{ margin: 0, fontFamily: "var(--font-ui)", fontWeight: 500, fontSize: "16px", lineHeight: 1.45, color: L.text }}>“{splitLines(dua.translation).join(" ")}”</p>
               </section>
             )}
 
@@ -131,7 +131,7 @@ export default function MemorizeView({ L, duas, focusId, onResult, onBack, onLib
               </div>
               <div style={{ display: "grid", gridTemplateColumns: `repeat(${RECALL_TARGET}, minmax(0, 1fr))`, gap: "6px" }}>
                 {Array.from({ length: RECALL_TARGET }, (_, i) => (
-                  <span key={i} style={{ height: "8px", borderRadius: "999px", background: isLearnt(dua) || i < (dua.recall || 0) ? L.green : L.track }} />
+                  <span key={i} style={{ height: "8px", borderRadius: "999px", background: isLearnt(dua) || i < (dua.recall || 0) ? L.green : L.border }} />
                 ))}
               </div>
             </section>
@@ -170,9 +170,9 @@ function Practice({ L, dua, mode }) {
   if (mode === "memory" && !showAll) {
     return (
       <section style={box}>
-        <p style={{ margin: 0, fontFamily: FONT_SERIF, fontSize: "20px", lineHeight: 1.4 }}>Recite “{dua.title}” from memory</p>
+        <p style={{ margin: 0, fontFamily: FONT_SERIF, fontWeight: 600, fontSize: "20px", lineHeight: 1.3 }}>Recite “{dua.title}” from memory</p>
         <p style={{ margin: 0, fontSize: "13px", color: L.heroMuted }}>Use the meaning below as your cue. Then check yourself.</p>
-        <button type="button" onClick={() => setShowAll(true)} style={{ height: "44px", padding: "0 18px", borderRadius: "999px", border: `1px dashed ${L.gold}`, background: "rgba(217,180,94,0.12)", color: L.heroText, fontSize: "14px", fontWeight: 600, fontFamily: "var(--font-ui)", cursor: "pointer" }}>
+        <button type="button" onClick={() => setShowAll(true)} style={{ height: "44px", padding: "0 18px", borderRadius: "999px", border: `1px dashed ${L.gold}`, background: "rgba(232,201,126,0.14)", color: L.heroText, fontSize: "14px", fontWeight: 600, fontFamily: "var(--font-ui)", cursor: "pointer" }}>
           Show the dua
         </button>
       </section>
@@ -191,7 +191,7 @@ function Practice({ L, dua, mode }) {
                   type="button"
                   aria-label={`Hidden word ${wi + 1}, tap to reveal`}
                   onClick={() => peek(`${li}-${wi}`)}
-                  style={{ minHeight: "52px", minWidth: "60px", padding: "4px 12px", borderRadius: "14px", border: `1px dashed ${L.gold}`, background: "rgba(217,180,94,0.12)", color: L.heroText, fontSize: "22px", fontWeight: 700, cursor: "pointer" }}
+                  style={{ minHeight: "52px", minWidth: "60px", padding: "4px 12px", borderRadius: "14px", border: `1px dashed ${L.gold}`, background: "rgba(232,201,126,0.14)", color: L.heroText, fontSize: "22px", fontWeight: 700, cursor: "pointer" }}
                 >
                   · · ·
                 </button>
@@ -223,7 +223,7 @@ function Practice({ L, dua, mode }) {
 function Finished({ L, empty, tally, onRestart, onLibrary }) {
   return (
     <section style={{ background: L.card, border: `1px solid ${L.border}`, borderRadius: "24px", padding: "28px 20px", display: "flex", flexDirection: "column", gap: "12px", alignItems: "center", textAlign: "center" }}>
-      <p style={{ margin: 0, fontFamily: FONT_SERIF, fontSize: "24px" }}>{empty ? "Nothing to practise yet" : "Session complete"}</p>
+      <p style={{ margin: 0, fontFamily: FONT_SERIF, fontWeight: 700, fontSize: "24px" }}>{empty ? "Nothing to practise yet" : "Session complete"}</p>
       <p style={{ margin: 0, fontSize: "14px", color: L.muted }}>
         {empty ? "Add a dua to your library to start memorizing." : `${tally.right} said right · ${tally.practice} need practice`}
       </p>

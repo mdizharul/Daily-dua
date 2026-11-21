@@ -4,7 +4,6 @@ import hashImage from "./utils/hashImage";
 import prepareImage from "./utils/prepareImage";
 import { extractDuaFromImage, extractDuaFromText } from "./services/extractApi";
 import { SAMPLE_DUAS, ARABIC_SCRIPTS } from "./constants";
-import { Spinner, StarIcon } from "./components/icons";
 import useTheme from "./hooks/useTheme";
 import SettingsView from "./views/SettingsView";
 import AddEditView from "./views/AddEditView";
@@ -31,7 +30,7 @@ function loadSection() {
 }
 
 export default function App() {
-  const { mode, cycleMode, T, icon: modeIcon, isLight, isDark } = useTheme();
+  const { mode, setMode } = useTheme();
   const istighfar = useIstighfar();
   const [section, setSectionState] = useState(loadSection);
   const setSection = (s) => {
@@ -251,20 +250,15 @@ export default function App() {
 
   const startEdit = (id) => handleEdit(duas.findIndex((d) => d.id === id));
 
-    if (loading) return (
-    <div style={{ minHeight: "100vh", background: T.appBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <style>{`@keyframes spin { from { transform:rotate(0deg) } to { transform:rotate(360deg) } }`}</style>
-      <Spinner size={28} />
-    </div>
-  );
+  if (loading) return <div style={{ minHeight: "100svh", background: "var(--bg)" }} />;
 
-  const L = getLibraryTheme(mode);
+  const L = getLibraryTheme();
   const goSection = (s) => {
     if (s === "memorize" && section !== "memorize") { startMemorize(); return; }
     if (s === "library" && section === "library") backToLibrary();
     setSection(s);
   };
-  const nav = <BottomNav section={section} onChange={goSection} L={L} />;
+  const nav = <BottomNav section={section} onChange={goSection} />;
 
   /* ══ ISTIGHFAR TRACKER ══ */
   if (section === "istighfar") return (
@@ -306,7 +300,7 @@ export default function App() {
         onRecite={() => handleRecite(selected.id)}
         onToggleLearnt={() => toggleLearnt(selected)}
         onMemorize={() => startMemorize(selected.id, true)}
-        onShare={() => shareAsImage(selected, mode === "paper")}
+        onShare={() => shareAsImage(selected, mode === "night")}
       />
       {nav}
     </>
@@ -328,117 +322,62 @@ export default function App() {
     </>
   );
 
-  /* ══ ADD / EDIT / SETTINGS (classic themed screens) ══ */
+  /* ══ ADD / EDIT / SETTINGS ══ */
   const editingId = editIdx !== null ? duas[editIdx]?.id : null;
   const leaveForm = () => {
     resetForm(); setEditIdx(null);
     if (editingId != null) { setSelectedId(editingId); setView("dua"); } else setView("home");
   };
 
-  return (
-    <div style={{ minHeight: "100vh", background: T.appBg, color: T.appColor, fontFamily: "var(--font-ui)", paddingBottom: "var(--nav-h)" }}>
-      <style>{`
-        textarea:focus, input:focus { border-color: ${T.focusBorder} !important; box-shadow: 0 0 20px ${T.focusShadow} !important; outline: none !important; }
-        * { box-sizing: border-box; }
-      `}</style>
-
-      {/* ══ HEADER ══ */}
-      <div style={{ textAlign: "center", padding: "2rem 1.5rem 1rem", position: "relative" }}>
-        {/* Top-left: Back */}
-        <button onClick={leaveForm}
-          style={{ position: "absolute", top: "0.75rem", left: "0.6rem", minHeight: "44px", background: "none", border: "none", color: T.gold, cursor: "pointer", fontSize: "0.9rem", fontFamily: "'Cormorant Garamond', serif", fontWeight: 600, padding: "0 0.6rem" }}>
-          ← Back
-        </button>
-
-        {/* Top-right: Theme toggle + Settings */}
-        <div style={{ position: "absolute", top: "0.75rem", right: "0.6rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <button onClick={cycleMode}
-            title={`Theme: ${mode}`}
-            style={{ background: isDark ? "rgba(201,168,76,0.08)" : isLight ? "rgba(26,107,60,0.08)" : "rgba(139,94,32,0.08)", border: `1px solid ${isDark ? "rgba(201,168,76,0.15)" : isLight ? "rgba(26,107,60,0.15)" : "rgba(139,94,32,0.15)"}`, borderRadius: "20px", padding: "0 0.55rem", minWidth: "44px", minHeight: "40px", justifyContent: "center", color: T.gold, cursor: "pointer", fontSize: "0.85rem", fontFamily: "var(--font-ui)", display: "flex", alignItems: "center", gap: "0.3rem", transition: "all 0.2s" }}>
-            <span>{modeIcon}</span>
-          </button>
-          <button aria-label="Settings" onClick={() => { if (view === "settings") leaveForm(); else setView("settings"); }}
-            style={{ background: "none", border: "none", color: T.goldFaint, cursor: "pointer", fontSize: "1.3rem", width: "44px", height: "44px" }}>⚙</button>
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.8rem", marginBottom: "0.3rem" }}>
-          <div style={{ width: "35px", height: "1px", background: `linear-gradient(90deg, transparent, ${T.gold})` }} />
-          <StarIcon size={12} color={T.gold} />
-          <div style={{ width: "35px", height: "1px", background: `linear-gradient(90deg, ${T.gold}, transparent)` }} />
-        </div>
-
-        {/* Logo mark — crescent + star inline */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.4rem", marginBottom: "0.2rem" }}>
-          <svg width="28" height="28" viewBox="0 0 64 64" style={{ flexShrink: 0 }}>
-            <path d="M38 13a19 19 0 1 0 0 38 15 15 0 1 1 0-38z" fill={isLight ? "#1a6b3c" : T.gold} />
-            <polygon points="45,17 46.4,21.3 51,21.3 47.3,23.9 48.7,28.2 45,25.6 41.3,28.2 42.7,23.9 39,21.3 43.6,21.3" fill={T.gold} />
-          </svg>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.8rem", fontWeight: 300, margin: 0, letterSpacing: "3px", ...(isDark ? { backgroundImage: "linear-gradient(90deg, #c9a84c 40%, #f0dfa0 50%, #c9a84c 60%)", backgroundSize: "200% auto", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 4s linear infinite" } : { color: T.heading }) }}>
-            DAILY DUA
-          </h1>
-        </div>
-        <p style={{ fontSize: "0.72rem", color: T.goldFaint, margin: 0, letterSpacing: "3px", textTransform: "uppercase" }}>
-          Screenshot · Extract · Memorize
-        </p>
-        {streak.count > 0 && (
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", marginTop: "0.4rem", padding: "0.2rem 0.75rem", background: streak.count >= 7 ? "rgba(255,140,0,0.12)" : (isDark ? "rgba(201,168,76,0.08)" : isLight ? "rgba(26,107,60,0.06)" : "rgba(139,94,32,0.08)"), border: `1px solid ${streak.count >= 7 ? "rgba(255,140,0,0.3)" : T.goldFaint}`, borderRadius: "20px" }}>
-            <span style={{ fontSize: "0.85rem" }}>{streak.count >= 7 ? "🔥" : "✨"}</span>
-            <span style={{ fontSize: "0.72rem", color: streak.count >= 7 ? "#ff8c00" : T.gold, fontFamily: "var(--font-ui)", fontWeight: 600 }}>{streak.count} day streak</span>
-          </div>
-        )}
-      </div>
-
-      <div style={{ maxWidth: "600px", margin: "0 auto", padding: "0 1rem 3rem" }}>
-
-        {/* ══ SETTINGS ══ */}
-        {view === "settings" && (
-          <SettingsView
-            duas={duas}
-            setDuas={setDuas}
-            tajweedMode={tajweedMode}
-            setTajweedMode={setTajweedMode}
-            arabicFontSize={arabicFontSize}
-            setArabicFontSize={setArabicFontSize}
-            scriptMode={scriptMode}
-            setScriptMode={setScriptMode}
-            importRef={importRef}
-            handleImport={handleImport}
-            T={T}
-          />
-        )}
-
-        {/* ══ ADD / EDIT ══ */}
-        {(view === "add" || view === "edit") && (
-          <AddEditView
-            editIdx={editIdx}
-            title={title}
-            setTitle={setTitle}
-            arabic={arabic}
-            setArabic={setArabic}
-            translit={translit}
-            setTranslit={setTranslit}
-            translation={translation}
-            setTrans={setTrans}
-            selectedCategory={selectedCategory}
-            setSelectedCategory={setSelectedCategory}
-            addMode={addMode}
-            setAddMode={setAddMode}
-            screenshot={screenshot}
-            setScreenshot={setScreenshot}
-            extracting={extracting}
-            extractError={extractError}
-            fileRef={fileRef}
-            handleScreenshot={handleScreenshot}
-            handlePasteExtract={handlePasteExtract}
-            handleSave={handleSave}
-            setView={(v) => (v === "home" ? leaveForm() : setView(v))}
-            T={T}
-            themeMode={mode}
-          />
-        )}
-
-      </div>
+  if (view === "settings") return (
+    <>
+      <SettingsView
+        duas={duas}
+        setDuas={setDuas}
+        tajweedMode={tajweedMode}
+        setTajweedMode={setTajweedMode}
+        arabicFontSize={arabicFontSize}
+        setArabicFontSize={setArabicFontSize}
+        scriptMode={scriptMode}
+        setScriptMode={setScriptMode}
+        themeMode={mode}
+        setThemeMode={setMode}
+        importRef={importRef}
+        handleImport={handleImport}
+        onBack={leaveForm}
+      />
       {nav}
-    </div>
+    </>
+  );
+
+  return (
+    <>
+      <AddEditView
+        editIdx={editIdx}
+        title={title}
+        setTitle={setTitle}
+        arabic={arabic}
+        setArabic={setArabic}
+        translit={translit}
+        setTranslit={setTranslit}
+        translation={translation}
+        setTrans={setTrans}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+        addMode={addMode}
+        setAddMode={setAddMode}
+        screenshot={screenshot}
+        setScreenshot={setScreenshot}
+        extracting={extracting}
+        extractError={extractError}
+        fileRef={fileRef}
+        handleScreenshot={handleScreenshot}
+        handlePasteExtract={handlePasteExtract}
+        handleSave={handleSave}
+        onBack={leaveForm}
+      />
+      {nav}
+    </>
   );
 }
+

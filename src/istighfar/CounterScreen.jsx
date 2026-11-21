@@ -204,7 +204,7 @@ export default function CounterScreen({ tracker, onOpenSettings, onOpenHistory, 
         <button
           type="button"
           onClick={onPocket}
-          style={{ ...pillButton, background: C.text, border: "none", color: "#fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2px", fontSize: "12px", fontWeight: 600 }}
+          style={{ ...pillButton, background: C.primary, border: "none", color: C.onPrimary, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2px", fontSize: "12px", fontWeight: 600 }}
         >
           <MoonIcon /> Pocket
         </button>

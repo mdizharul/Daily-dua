@@ -107,7 +107,7 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
           {showMeaning && mLines.length > 0 && (
             <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "4px", alignItems: "center" }}>
               <span style={label}>Matlab</span>
-              <p style={{ margin: 0, fontFamily: FONT_SERIF, fontSize: mLines.join(" ").length > 120 ? "17px" : "21px", lineHeight: 1.4, color: "#FFFFFF" }}>
+              <p style={{ margin: 0, fontFamily: "var(--font-ui)", fontWeight: 500, fontSize: mLines.join(" ").length > 120 ? "16px" : "19px", lineHeight: 1.45, color: L.heroText }}>
                 “{mLines.join(" ")}”
               </p>
             </div>
@@ -170,7 +170,7 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
           <button type="button" aria-pressed={learnt} onClick={onToggleLearnt} style={{ ...tile(L), ...(learnt ? { background: L.greenBg, borderColor: L.green, color: L.green } : null) }}>
             <CheckIcon /> {learnt ? "Learnt" : "Mark learnt"}
           </button>
-          <button type="button" onClick={onShare} style={{ ...tile(L), background: L.gold, border: "none", color: "#131A2E", fontWeight: 700 }}>
+          <button type="button" onClick={onShare} style={{ ...tile(L), background: L.accent, border: "none", color: L.onAccent, fontWeight: 700 }}>
             <ShareIcon /> Share card
           </button>
         </div>

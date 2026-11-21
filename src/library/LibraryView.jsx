@@ -34,7 +34,7 @@ export default function LibraryView({ L, duas, filters, setFilters, streak, onOp
         <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "8px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
             <span style={{ fontSize: "13px", color: L.muted, fontWeight: 500 }}>{headerDate()}</span>
-            <h1 style={{ margin: 0, fontFamily: FONT_SERIF, fontSize: "30px", fontWeight: 400, color: L.text }}>Daily Dua</h1>
+            <h1 style={{ margin: 0, fontFamily: FONT_SERIF, fontSize: "28px", fontWeight: 700, letterSpacing: "-0.5px", color: L.text }}>Daily Dua</h1>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             {streak > 0 && (
@@ -156,8 +156,8 @@ export default function LibraryView({ L, duas, filters, setFilters, streak, onOp
           padding: "0 20px",
           borderRadius: "999px",
           border: "none",
-          background: L.gold,
-          color: "#131A2E",
+          background: L.accent,
+          color: L.onAccent,
           display: "flex",
           alignItems: "center",
           gap: "8px",

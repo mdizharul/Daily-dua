@@ -8,8 +8,10 @@ your memorization.
 with To learn / Learnt, search and category filters · a page per dua (listen,
 recited-today counter, mark learnt, share as image) · Memorize mode: Read, Fill
 blanks, From memory — 5 correct recalls marks a dua learnt · daily streak ·
-Dark / Light / Paper themes · tajweed markers · Arabic script & size · JSON
-backup export & import. Design: `docs/design/daily-dua-mockup.html`.
+Day / Night appearance · tajweed markers · Arabic script & size · JSON
+backup export & import. One design across the app (the Dhikr look: cream, green,
+Inter + Space Grotesk) with a Night mode — colours live in `src/index.css`
+as CSS variables and are used through `src/theme/tokens.js`.
 
 **Dhikr tracker** (bottom tab) for **Istighfar** and **Hasbunallahu wa ni'mal
 wakeel** — track one or both, each with its own count, goal, streak and history:
@@ -53,20 +55,20 @@ environment variable `GEMINI_API_KEY` in the site settings.
 │   ├── App.jsx                App state, header, screen switching, dua actions
 │   ├── index.css              Global base styles
 │   ├── constants.js           Statuses, categories, sample duas
-│   ├── library/               Library, dua page, Memorize (mockup style, see theme.js)
+│   ├── theme/tokens.js        Design system: colours (Day/Night), fonts, shared styles
+│   ├── library/               Library, dua page, Memorize
 │   │   ├── LibraryView.jsx    Home: To learn / Learnt, search, categories, list
 │   │   ├── DuaDetailView.jsx  One dua: card, listen, recited today, learnt, share
 │   │   ├── MemorizeView.jsx   Read / Fill blanks / From memory practice
 │   │   └── duaUtils.js        Dates (incl. Hijri), recall target, helpers
-│   ├── views/                 Classic themed screens
-│   │   ├── AddEditView.jsx    Add/edit: screenshot, paste text, or manual
-│   │   └── SettingsView.jsx   Script, tajweed, font size, backup/import/clear
+│   ├── views/
+│   │   ├── AddEditView.jsx    Add/edit: take photo, image, paste text, or type
+│   │   └── SettingsView.jsx   Day/Night, script, text size, tajweed, backup
 │   ├── components/
 │   │   ├── BottomNav.jsx      Library · Memorize · Istighfar tabs
 │   │   ├── TajweedText.jsx    Arabic text with tajweed underlines
-│   │   └── icons.jsx          Star, spinner
-│   ├── hooks/useTheme.js      Dark / Light / Paper colour themes
-│   ├── istighfar/             Dhikr tracker: Istighfar + Hasbunallah (own green style)
+│   ├── hooks/useTheme.js      Day / Night switch
+│   ├── istighfar/             Dhikr tracker: Istighfar + Hasbunallah
 │   │   ├── IstighfarSection.jsx  Counter, with History and Goal & settings
 │   │   ├── CounterScreen.jsx, PocketMode.jsx, HistoryScreen.jsx, GoalSettingsScreen.jsx
 │   │   ├── useIstighfar.js    State, counting, undo, vibration
@@ -75,7 +77,7 @@ environment variable `GEMINI_API_KEY` in the site settings.
 │   ├── services/
 │   │   ├── extractApi.js      Calls /api/extract and /api/extract-text
 │   │   └── storage.js         localStorage read/write
-│   └── utils/                 tajweed rules, image hash, share-as-image
+│   └── utils/                 tajweed rules, image hash/resize, share-as-image
 ├── server/                    Back end (shared by every host)
 │   ├── gemini.js              Gemini prompts + calls — edit prompts here
 │   └── netlify.js             Adapter for Netlify functions

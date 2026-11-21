@@ -47,11 +47,12 @@ export const saveStreak = (streak) => write(KEYS.streak, JSON.stringify(streak))
 export const loadFontSize = () => parseFloat(read(KEYS.fontSize)) || 1.2;
 export const saveFontSize = (size) => write(KEYS.fontSize, String(size));
 
+/** "day" | "night". Older saves used dark / light / paper; dark becomes night, the rest day. */
 export function loadThemeMode() {
   const s = read(KEYS.theme);
-  if (["dark", "light", "paper"].includes(s)) return s;
-  // The older (Netlify) version stored Paper Mode as a separate on/off flag.
-  return read("paper-mode") === "true" ? "paper" : "dark";
+  if (s === "day" || s === "night") return s;
+  if (s === "dark") return "night";
+  return "day";
 }
 export const saveThemeMode = (mode) => write(KEYS.theme, mode);
 

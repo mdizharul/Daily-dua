@@ -1,26 +1,32 @@
-// The Istighfar tracker keeps the look of its own mockup (green on warm white),
-// independent of Daily Dua's Dark / Light / Paper themes.
+// The Dhikr tracker uses the app-wide design system (src/theme/tokens.js).
+// Kept as its own module so the tracker's screens read naturally (C.accent, C.ring…).
+import { T, FONT, FONT_DISPLAY, card, iconButton, pillButton } from "../theme/tokens";
+
 export const C = {
-  bg: "#F5F3EC",
-  card: "#FFFFFF",
-  border: "#E3E1D8",
-  divider: "#EEECE5",
-  text: "#14211D",
-  muted: "#5B6B65",
-  accent: "#1E6B52",
-  accentSoft: "#DCEBE4",
-  accentTint: "#EEF5F1",
-  ring: "#E6EBE7",
-  barLight: "#C8D9D1",
-  barToday: "#9CC7B6",
-  goalLine: "#C9CFCB",
-  legendLine: "#8A9792",
-  radioOff: "#B9C2BE",
-  streakBg: "#FBEFD9",
-  streakText: "#6E4A0E",
-  streakIcon: "#B8862F",
-  warnBg: "#FBEFD9",
-  warnText: "#6E4A0E",
+  bg: T.bg,
+  card: T.card,
+  border: T.border,
+  divider: T.divider,
+  text: T.text,
+  muted: T.muted,
+  accent: T.accent,
+  onAccent: T.onAccent,
+  accentSoft: T.accentSoft,
+  accentTint: T.accentTint,
+  primary: T.primary,
+  onPrimary: T.onPrimary,
+  ring: T.ring,
+  barLight: T.barLight,
+  barToday: T.barToday,
+  goalLine: T.goalLine,
+  legendLine: T.legendLine,
+  radioOff: T.radioOff,
+  streakBg: T.warmBg,
+  streakText: T.warmText,
+  streakIcon: T.warmIcon,
+  warnBg: T.warmBg,
+  warnText: T.warmText,
+  // Pocket mode is always dark (screen dimmed in a pocket), in Day and Night alike.
   pocket: {
     bg: "#080B0A",
     text: "#C8D8D1",
@@ -31,37 +37,5 @@ export const C = {
   },
 };
 
-export const FONT = "'Inter', system-ui, sans-serif";
-export const FONT_NUM = "'Space Grotesk', 'Inter', sans-serif";
-
-export const card = {
-  background: C.card,
-  border: `1px solid ${C.border}`,
-  borderRadius: "24px",
-  padding: "16px",
-};
-
-export const pillButton = {
-  height: "56px",
-  borderRadius: "16px",
-  background: C.card,
-  border: `1px solid ${C.border}`,
-  color: C.text,
-  cursor: "pointer",
-  fontFamily: FONT,
-};
-
-export const iconButton = {
-  width: "44px",
-  height: "44px",
-  borderRadius: "999px",
-  background: C.card,
-  border: `1px solid ${C.border}`,
-  color: C.text,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  cursor: "pointer",
-  padding: 0,
-  flexShrink: 0,
-};
+export { FONT, card, iconButton, pillButton };
+export const FONT_NUM = FONT_DISPLAY;
