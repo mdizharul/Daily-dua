@@ -3,6 +3,7 @@ import { CATEGORIES, MOODS } from "../constants";
 import { T, FONT, card, chip, column, h1, iconButton, input, label, page, primaryButton, secondaryButton, segOption, segTrack } from "../theme/tokens";
 import { BackIcon } from "../library/icons";
 import { needsHarakat } from "../library/duaUtils";
+import { matchesVerse } from "../services/quran";
 
 const Spinner = ({ size = 16 }) => (
   <span
@@ -43,9 +44,12 @@ export default function AddEditView({
   screenshot, setScreenshot,
   extracting, extractError,
   fileRef, handleScreenshot, handlePasteExtract, handleSave, onAddHarakat,
+  translationEn = "", setTranslationEn, source = "", setSource,
+  verseArabic = "", quranCheck, handleQuranLookup, initialPaste = "",
   onBack,
 }) {
-  const [pasteText, setPasteText] = useState("");
+  const [pasteText, setPasteText] = useState(initialPaste);
+  const [refText, setRefText] = useState("");
   const [fixing, setFixing] = useState(false);
   const [fixError, setFixError] = useState("");
 
@@ -83,10 +87,11 @@ export default function AddEditView({
 
         {!editing && (
           <>
-            <div role="tablist" aria-label="How to add" style={segTrack(2)}>
+            <div role="tablist" aria-label="How to add" style={segTrack(3)}>
               {[
-                ["screenshot", "📷 Photo / screenshot"],
-                ["paste", "📋 Paste text"],
+                ["screenshot", "📷 Photo"],
+                ["paste", "📋 Paste"],
+                ["quran", "📖 Quran"],
               ].map(([id, text]) => (
                 <button key={id} type="button" role="tab" aria-selected={addMode === id} onClick={() => setAddMode(id)} style={{ ...segOption(addMode === id), fontSize: "13px" }}>
                   {text}
@@ -140,11 +145,45 @@ export default function AddEditView({
               </section>
             )}
 
+            {addMode === "quran" && (
+              <section style={{ ...card, display: "flex", flexDirection: "column", gap: "12px" }}>
+                <label style={{ ...label, marginBottom: 0 }} htmlFor="quran-ref">
+                  Quran verse
+                </label>
+                <span style={{ fontSize: "13px", color: T.muted, marginTop: "-6px" }}>
+                  Type a reference — the exact Arabic comes from the Quran text, so it's verified.
+                </span>
+                <input
+                  id="quran-ref"
+                  type="text"
+                  inputMode="text"
+                  placeholder="e.g. Ta-Ha 20:114, 2:201, Al-Baqarah 285-286"
+                  value={refText}
+                  onChange={(e) => setRefText(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && refText.trim() && !extracting && handleQuranLookup(refText)}
+                  style={input}
+                />
+                <button type="button" disabled={!refText.trim() || extracting} onClick={() => handleQuranLookup(refText)} style={{ ...primaryButton(refText.trim() && !extracting), display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                  {extracting ? (
+                    <>
+                      <Spinner /> Finding verse…
+                    </>
+                  ) : (
+                    "Find verse"
+                  )}
+                </button>
+                {extractError && <Notice tone="error">{extractError}</Notice>}
+              </section>
+            )}
+
             {addMode === "paste" && (
               <section style={{ ...card, display: "flex", flexDirection: "column", gap: "12px" }}>
                 <label style={{ ...label, marginBottom: 0 }} htmlFor="paste-arabic">
                   Paste the Arabic dua
                 </label>
+                <span style={{ fontSize: "13px", color: T.muted, marginTop: "-6px" }}>
+                  Tip: on Android, install Daily Dua to your home screen, then select a dua in any app → Share → Daily Dua.
+                </span>
                 <textarea
                   id="paste-arabic"
                   rows={4}
@@ -166,9 +205,38 @@ export default function AddEditView({
               </section>
             )}
 
+            {quranCheck && !extracting && (
+              <div
+                role="status"
+                style={{
+                  padding: "12px 14px",
+                  borderRadius: "14px",
+                  fontSize: "13px",
+                  lineHeight: 1.45,
+                  background: quranCheck.ok ? T.accentTint : T.warmBg,
+                  color: quranCheck.ok ? T.text : T.warmText,
+                  border: `1px solid ${quranCheck.ok ? T.accentSoft : "transparent"}`,
+                }}
+              >
+                {quranCheck.ok ? (
+                  <>
+                    <strong style={{ color: T.accent }}>✓ {quranCheck.lookup ? "Verse found" : "Match found"}: {quranCheck.label}.</strong>{" "}
+                    {quranCheck.whole
+                      ? "The Arabic and English are the verified Quran text."
+                      : "Your dua is part of this verse — the words match the Quran text."}{" "}
+                    Transliteration and Matlab are AI-made, so check them once before saving.
+                  </>
+                ) : (
+                  <>
+                    <strong>Check the source.</strong> The AI thinks this is from {quranCheck.label}, but the words don't match the Quran text there, so it isn't marked as verified.
+                  </>
+                )}
+              </div>
+            )}
+
             <div style={{ display: "flex", alignItems: "center", gap: "12px", color: T.muted, fontSize: "12px", fontWeight: 600 }}>
               <span style={{ flex: 1, height: "1px", background: T.border }} />
-              {screenshot || pasteText ? "Check and edit" : "Or type it yourself"}
+              {screenshot || pasteText || quranCheck ? "Check and edit" : "Or type it yourself"}
               <span style={{ flex: 1, height: "1px", background: T.border }} />
             </div>
           </>
@@ -206,6 +274,24 @@ export default function AddEditView({
           <div>
             <label style={label} htmlFor="dua-meaning">Meaning (Matlab)</label>
             <textarea id="dua-meaning" rows={3} placeholder="Allah ke naam se…" value={translation} onChange={(e) => setTrans(e.target.value)} style={input} />
+          </div>
+          <div>
+            <label style={label} htmlFor="dua-english">English meaning</label>
+            <textarea id="dua-english" rows={3} placeholder="In the name of Allah…" value={translationEn} onChange={(e) => setTranslationEn(e.target.value)} style={input} />
+          </div>
+          <div>
+            <label style={label} htmlFor="dua-source">Source (optional)</label>
+            <input id="dua-source" type="text" placeholder="e.g. Quran 20:114, Sahih al-Bukhari" value={source} onChange={(e) => setSource(e.target.value)} style={input} />
+            {verseArabic && arabic.trim() && (
+              matchesVerse(arabic, verseArabic) ? (
+                <span style={{ display: "block", marginTop: "6px", fontSize: "12px", fontWeight: 600, color: T.accent }}>✓ Verified against the Quran text</span>
+              ) : (
+                <span style={{ display: "block", marginTop: "6px", fontSize: "12px", color: T.warmText }}>The Arabic was changed and no longer matches the verse, so it won't be marked verified.</span>
+              )
+            )}
+            {!verseArabic && source.trim() && (
+              <span style={{ display: "block", marginTop: "6px", fontSize: "12px", color: T.muted }}>Not verified — check the source yourself if it came from AI.</span>
+            )}
           </div>
         </section>
 

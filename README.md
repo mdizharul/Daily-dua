@@ -5,7 +5,10 @@ Gemini) extracts the Arabic, Roman-Urdu transliteration and translation → trac
 your memorization.
 
 **Features:** photo / screenshot / paste-text extraction with auto-category
-and moods · Library with Today's routine (duas you recite daily, with progress),
+and moods · Quran verse lookup by reference with verified Arabic and English
+(AlQuran Cloud), and AI-read Quran duas checked against the real verse ·
+English meaning and source on every dua · "Share → Daily Dua" from other
+apps on Android (installed app) · Library with Today's routine (duas you recite daily, with progress),
 Today's dua, "How is your heart today?" mood filters, To learn / Learnt and
 search · a page per dua (listen, recited-today counter, daily routine, mark
 learnt, share card in 4 themes × fit / square / tall) · Memorize mode: Read, Fill
@@ -51,7 +54,7 @@ environment variable `GEMINI_API_KEY` in the site settings.
 
 ```
 ├── index.html
-├── public/favicon.svg
+├── public/                  favicon, app icons, manifest (share target), sw.js
 ├── src/                       Front end (React)
 │   ├── main.jsx               Entry point
 │   ├── App.jsx                App state, header, screen switching, dua actions
@@ -78,6 +81,7 @@ environment variable `GEMINI_API_KEY` in the site settings.
 │   │   └── data.js            Dhikr list (TRACKERS), storage, day rollover, stats
 │   ├── services/
 │   │   ├── extractApi.js      Calls /api/extract and /api/extract-text
+│   │   ├── quran.js           Verse lookup + verification (api.alquran.cloud)
 │   │   └── storage.js         localStorage read/write
 │   └── utils/                 tajweed rules, image hash/resize, share-as-image
 ├── server/                    Back end (shared by every host)

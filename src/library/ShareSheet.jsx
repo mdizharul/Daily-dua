@@ -15,7 +15,7 @@ function loadStyle(night) {
 }
 
 /** Bottom sheet: choose a card theme and size, preview it, then Share or Save image. */
-export default function ShareSheet({ dua, night, onClose }) {
+export default function ShareSheet({ dua, show, night, onClose }) {
   const [style, setStyleState] = useState(() => loadStyle(night));
   const [blob, setBlob] = useState(null);
   const [url, setUrl] = useState(null);
@@ -38,7 +38,7 @@ export default function ShareSheet({ dua, night, onClose }) {
   useEffect(() => {
     let alive = true;
     let objectUrl;
-    renderDuaImage(dua, style).then((b) => {
+    renderDuaImage(dua, { ...style, show }).then((b) => {
       if (!alive || !b) return;
       objectUrl = URL.createObjectURL(b);
       setBlob(b);
@@ -48,7 +48,7 @@ export default function ShareSheet({ dua, night, onClose }) {
       alive = false;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [dua, style]);
+  }, [dua, style, show]);
 
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && onClose();

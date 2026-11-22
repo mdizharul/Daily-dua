@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import ShareSheet from "./ShareSheet";
 import TajweedText from "../components/TajweedText";
 import { FONT_SERIF, chip, column, iconBtn, page, tile } from "./theme";
@@ -13,13 +13,34 @@ const SIZES = [
 ];
 
 /** One dua on its own page (mockup screen 3). */
+const SHOW_KEY = "card-show";
+const loadShow = () => {
+  try {
+    return { translit: true, matlab: true, english: false, ...JSON.parse(localStorage.getItem(SHOW_KEY) || "{}") };
+  } catch {
+    return { translit: true, matlab: true, english: false };
+  }
+};
+
 // Duas longer than this start collapsed, with a "Show full dua" button.
 const isLongDua = (dua) =>
   splitLines(dua.arabic).length > 3 || dua.arabic.length > 160 || (dua.transliteration || "").length + (dua.translation || "").length > 420;
 
 export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, onBack, onEdit, onDelete, onRecite, onToggleLearnt, onToggleRoutine, onMemorize }) {
-  const [showTranslit, setShowTranslit] = useState(true);
-  const [showMeaning, setShowMeaning] = useState(true);
+  // Which parts the card shows — remembered across duas and used for the share card too.
+  const [show, setShowState] = useState(loadShow);
+  const setShow = (patch) =>
+    setShowState((prev) => {
+      const next = { ...prev, ...patch };
+      try {
+        localStorage.setItem(SHOW_KEY, JSON.stringify(next));
+      } catch {
+        // storage blocked
+      }
+      return next;
+    });
+  const showTranslit = show.translit;
+  const showMeaning = show.matlab;
   const [speaking, setSpeaking] = useState(false);
   const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -34,6 +55,9 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
   const aLines = splitLines(dua.arabic);
   const tLines = splitLines(dua.transliteration);
   const mLines = splitLines(dua.translation);
+  const eLines = splitLines(dua.translationEn);
+  const showEnglish = show.english && eLines.length > 0;
+  const shareShow = useMemo(() => ({ translit: showTranslit, matlab: showMeaning, english: showEnglish }), [showTranslit, showMeaning, showEnglish]);
   const learnt = isLearnt(dua);
   const today = recitedToday(dua);
 
@@ -141,6 +165,15 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
             </div>
           )}
 
+          {showEnglish && (
+            <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "4px", alignItems: "center" }}>
+              <span style={label}>English</span>
+              <p style={{ margin: 0, fontFamily: "var(--font-ui)", fontWeight: 400, fontSize: "14px", lineHeight: 1.55, color: L.heroMuted }}>
+                “{eLines.join(" ")}”
+              </p>
+            </div>
+          )}
+
           </div>
 
           {long && (
@@ -155,6 +188,13 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
             </button>
           )}
 
+          {dua.source && (
+            <span style={{ position: "relative", fontSize: "13px", color: L.heroText, fontWeight: 600 }}>
+              {dua.source}
+              {dua.verified && <span style={{ color: L.gold, marginLeft: "6px" }}>✓ Verified</span>}
+            </span>
+          )}
+
           <span style={{ position: "relative", fontSize: "13px", color: L.heroMuted }}>
             {[categoryLabel(dua), ...duaMoods(dua).map((id) => MOODS.find((m) => m.id === id)?.label)].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(" · ")}
           </span>
@@ -162,12 +202,17 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
 
         {/* What to show + listen + text size */}
         <div role="group" aria-label="Show on card" style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
-          <button type="button" aria-pressed={showTranslit} onClick={() => setShowTranslit(!showTranslit)} style={chip(L, showTranslit)}>
+          <button type="button" aria-pressed={showTranslit} onClick={() => setShow({ translit: !showTranslit })} style={chip(L, showTranslit)}>
             Transliteration
           </button>
-          <button type="button" aria-pressed={showMeaning} onClick={() => setShowMeaning(!showMeaning)} style={chip(L, showMeaning)}>
+          <button type="button" aria-pressed={showMeaning} onClick={() => setShow({ matlab: !showMeaning })} style={chip(L, showMeaning)}>
             Matlab
           </button>
+          {eLines.length > 0 && (
+            <button type="button" aria-pressed={show.english} onClick={() => setShow({ english: !show.english })} style={chip(L, show.english)}>
+              English
+            </button>
+          )}
           {/* Listen + size stay together; on narrow phones they wrap as a pair */}
           <span style={{ display: "flex", gap: "8px", marginLeft: "auto" }}>
             <button type="button" aria-label={speaking ? "Stop" : "Listen"} onClick={speak} style={{ ...chip(L, speaking), width: "40px", padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -257,7 +302,7 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
           </button>
         </div>
       </div>
-      {sharing && <ShareSheet dua={dua} night={document.documentElement.dataset.theme === "night"} onClose={closeShare} />}
+      {sharing && <ShareSheet dua={dua} show={shareShow} night={document.documentElement.dataset.theme === "night"} onClose={closeShare} />}
     </div>
   );
 }

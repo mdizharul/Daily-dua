@@ -205,10 +205,17 @@ export default function LibraryView({ L, duas, filters, setFilters, streak, onOp
                 >
                   {splitLines(dua.arabic)[0]}
                 </span>
-                {dua.translation && (
+                {dua.source ? (
                   <span style={{ fontSize: "12px", color: L.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", width: "100%" }}>
-                    {splitLines(dua.translation)[0]}
+                    {dua.source}
+                    {dua.verified && <span style={{ color: L.green, fontWeight: 600 }}> ✓</span>}
                   </span>
+                ) : (
+                  dua.translation && (
+                    <span style={{ fontSize: "12px", color: L.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", width: "100%" }}>
+                      {splitLines(dua.translation)[0]}
+                    </span>
+                  )
                 )}
               </button>
             );

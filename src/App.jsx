@@ -3,6 +3,7 @@ import { loadDuas, saveDuas, loadTajweedMode, loadFontSize, saveFontSize, loadSt
 import hashImage from "./utils/hashImage";
 import prepareImage from "./utils/prepareImage";
 import { extractDuaFromImage, extractDuaFromText } from "./services/extractApi";
+import { lookupVerse, matchesVerse, verifyQuranRef } from "./services/quran";
 import { SAMPLE_DUAS, ARABIC_SCRIPTS, MOOD_IDS } from "./constants";
 import useTheme from "./hooks/useTheme";
 import SettingsView from "./views/SettingsView";
@@ -55,6 +56,13 @@ export default function App() {
   const [translit, setTranslit]   = useState("");
   const [translation, setTrans]   = useState("");
   const [selectedMoods, setSelectedMoods] = useState([]);
+  const [translationEn, setTranslationEn] = useState("");
+  const [source, setSource] = useState("");
+  // Quran verification: the verse the dua was matched to, and what the check found.
+  const [quranRef, setQuranRef] = useState("");
+  const [verseArabic, setVerseArabic] = useState("");
+  const [quranCheck, setQuranCheck] = useState(null); // { ok, label, whole } or null
+  const [sharedText, setSharedText] = useState(""); // text shared into the app from another app
   const [selectedCategory, setSelectedCategory] = useState("general");
   const [addMode, setAddMode] = useState("screenshot");
 
@@ -97,6 +105,17 @@ export default function App() {
     setStreak(loadStreak());
     setArabicFontSize(loadFontSize());
     setScriptModeState(loadScriptMode());
+
+    // Opened via Android "Share → Daily Dua": start a new dua with the shared text.
+    const params = new URLSearchParams(window.location.search);
+    const shared = [params.get("text"), params.get("url")].filter(Boolean).join("\n").trim();
+    if (shared) {
+      setSharedText(shared);
+      setSectionState("library");
+      setAddMode("paste");
+      setView("add");
+      window.history.replaceState(null, "", "/");
+    }
     setLoading(false);
   }, []);
 
@@ -110,7 +129,72 @@ export default function App() {
   }, [scriptMode]);
 
   /* ── Form reset ── */
-  const resetForm = () => { setTitle(""); setArabic(""); setTranslit(""); setTrans(""); setSelectedMoods([]); setSelectedCategory("general"); setScreenshot(null); setExtractError(null); setExtracting(false); setAddMode("screenshot"); };
+  const resetForm = () => { setTitle(""); setArabic(""); setTranslit(""); setTrans(""); setSelectedMoods([]); setTranslationEn(""); setSource(""); setQuranRef(""); setVerseArabic(""); setQuranCheck(null); setSelectedCategory("general"); setScreenshot(null); setExtractError(null); setExtracting(false); setAddMode("screenshot"); };
+
+  /* ── Fill the form from an AI result, then check any Quran reference against the real text ── */
+  const applyResult = async (result, fallbackArabic = "") => {
+    const ar = result.arabic || fallbackArabic;
+    setTitle(result.title || "");
+    setArabic(ar);
+    setTranslit(result.transliteration || "");
+    setTrans(result.translation || "");
+    setTranslationEn(result.translation_en || "");
+    setSource(result.source || "");
+    setQuranRef("");
+    setVerseArabic("");
+    setQuranCheck(null);
+    if (result.category) setSelectedCategory(result.category);
+    if (Array.isArray(result.moods)) setSelectedMoods(result.moods.filter((m) => MOOD_IDS.includes(m)));
+    if (!result.quran_ref) return;
+    try {
+      const check = await verifyQuranRef(ar, result.quran_ref);
+      if (!check) return;
+      if (check.verified) {
+        // Whole verse: use the verified Quran text and translation. Part of a verse: keep the dua as read.
+        if (check.whole) {
+          setArabic(check.verse.arabic);
+          setTranslationEn(check.verse.english);
+        }
+        setQuranRef(check.verse.ref);
+        setVerseArabic(check.verse.arabic);
+        setSource(check.verse.label);
+      }
+      setQuranCheck({ ok: check.verified, whole: check.whole, label: check.verse.label });
+    } catch {
+      // Quran service unreachable (offline): keep the AI result, just unverified.
+    }
+  };
+
+  /* ── Quran reference lookup: verified text first, then AI for transliteration and meaning ── */
+  const handleQuranLookup = async (input) => {
+    if (!input.trim()) return;
+    setExtracting(true);
+    setExtractError(null);
+    setQuranCheck(null);
+    try {
+      const verse = await lookupVerse(input);
+      setArabic(verse.arabic);
+      setTranslationEn(verse.english);
+      setSource(verse.label);
+      setQuranRef(verse.ref);
+      setVerseArabic(verse.arabic);
+      setQuranCheck({ ok: true, whole: true, label: verse.label, lookup: true });
+      if (!title.trim()) setTitle(verse.label);
+      try {
+        const r = await extractDuaFromText(verse.arabic);
+        if (r.title) setTitle(r.title);
+        setTranslit(r.transliteration || "");
+        setTrans(r.translation || "");
+        if (r.category) setSelectedCategory(r.category);
+        if (Array.isArray(r.moods)) setSelectedMoods(r.moods.filter((m) => MOOD_IDS.includes(m)));
+      } catch {
+        setExtractError("Verse found, but the AI couldn't write the transliteration and meaning. You can type them, or try again.");
+      }
+    } catch (err) {
+      setExtractError(err.message || "Could not find that verse.");
+    }
+    setExtracting(false);
+  };
 
   /* ── Screenshot upload with duplicate + validation ── */
   const handleScreenshot = async (e) => {
@@ -140,13 +224,7 @@ export default function App() {
       try {
         const result = await extractDuaFromImage(base64, mimeType);
         processedHashes.current.add(hash);
-        setTitle(result.title || "");
-        setArabic(result.arabic || "");
-        setTranslit(result.transliteration || "");
-        setTrans(result.translation || "");
-        if (result.category) setSelectedCategory(result.category);
-      if (Array.isArray(result.moods)) setSelectedMoods(result.moods.filter((m) => MOOD_IDS.includes(m)));
-        if (Array.isArray(result.moods)) setSelectedMoods(result.moods.filter((m) => MOOD_IDS.includes(m)));
+        await applyResult(result);
       } catch (err) {
         setScreenshot(null); // clear preview on error so user can try again
         setExtractError(err.message || "Could not extract. Fill in manually.");
@@ -155,7 +233,6 @@ export default function App() {
     }
   };
 
-  /* ── Paste text extract ── */
   /* ── Add missing harakat: sends only the Arabic, replaces only the Arabic ── */
   const addHarakat = async (text) => {
     const result = await extractDuaFromText(text);
@@ -163,20 +240,17 @@ export default function App() {
     setArabic(result.arabic);
     if (!translit.trim() && result.transliteration) setTranslit(result.transliteration);
     if (!translation.trim() && result.translation) setTrans(result.translation);
+    if (!translationEn.trim() && result.translation_en) setTranslationEn(result.translation_en);
   };
 
+  /* ── Paste text extract ── */
   const handlePasteExtract = async (pastedText) => {
     if (!pastedText.trim()) return;
     setExtracting(true);
     setExtractError(null);
     try {
       const result = await extractDuaFromText(pastedText);
-      setTitle(result.title || "");
-      setArabic(result.arabic || pastedText);
-      setTranslit(result.transliteration || "");
-      setTrans(result.translation || "");
-      if (result.category) setSelectedCategory(result.category);
-      if (Array.isArray(result.moods)) setSelectedMoods(result.moods.filter((m) => MOOD_IDS.includes(m)));
+      await applyResult(result, pastedText);
     } catch (err) {
       setExtractError(err.message || "Could not extract. Fill in manually.");
       setArabic(pastedText);
@@ -191,6 +265,12 @@ export default function App() {
       id: editIdx !== null ? duas[editIdx].id : Date.now(),
       title: title.trim() || `Dua ${duas.length + 1}`,
       arabic: arabic.trim(), transliteration: translit.trim(), translation: translation.trim(),
+      translationEn: translationEn.trim(),
+      source: source.trim(),
+      quranRef: quranRef || undefined,
+      quranText: verseArabic || undefined,
+      // Verified only when the saved Arabic is still found in the real verse.
+      verified: Boolean(verseArabic && matchesVerse(arabic, verseArabic)),
       status: editIdx !== null ? duas[editIdx].status : "new",
       dateAdded: editIdx !== null ? duas[editIdx].dateAdded : new Date().toISOString().slice(0, 10),
       category: selectedCategory,
@@ -212,6 +292,11 @@ export default function App() {
     const d = duas[idx];
     setTitle(d.title); setArabic(d.arabic); setTranslit(d.transliteration); setTrans(d.translation);
     setSelectedMoods(duaMoods(d));
+    setTranslationEn(d.translationEn || "");
+    setSource(d.source || "");
+    setQuranRef(d.quranRef || "");
+    setVerseArabic(d.quranText || "");
+    setQuranCheck(null);
     setSelectedCategory(d.category || "general");
     setEditIdx(idx); setView("edit");
   };
@@ -394,6 +479,14 @@ export default function App() {
         handlePasteExtract={handlePasteExtract}
         handleSave={handleSave}
         onAddHarakat={addHarakat}
+        initialPaste={sharedText}
+        translationEn={translationEn}
+        setTranslationEn={setTranslationEn}
+        source={source}
+        setSource={setSource}
+        verseArabic={verseArabic}
+        quranCheck={quranCheck}
+        handleQuranLookup={handleQuranLookup}
         onBack={leaveForm}
       />
       {nav}

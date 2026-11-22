@@ -40,7 +40,7 @@ const split = (t = "") => t.split("\n").map((l) => l.trim()).filter(Boolean);
 export const fileNameFor = (title) => `${(title || "dua").replace(/[^\w؀-ۿ]+/g, "-")}.png`;
 
 /** Lays out every line at text scale `s`; returns rows and their total height. */
-function layout(dua, W, s, arabicFont, arabicScale, theme) {
+function layout(dua, W, s, arabicFont, arabicScale, theme, show) {
   const measure = document.createElement("canvas").getContext("2d");
   const maxW = W - PAD * 2;
   const rows = [];
@@ -54,22 +54,32 @@ function layout(dua, W, s, arabicFont, arabicScale, theme) {
   add([dua.title || ""], `600 ${15 * s}px 'Inter', sans-serif`, theme.gold, 22 * s);
   gap(18 * s);
   add(split(dua.arabic), `700 ${28 * s * arabicScale}px ${arabicFont}`, theme.text, 50 * s * arabicScale, "rtl");
-  const translit = split(dua.transliteration);
+  const translit = show.translit === false ? [] : split(dua.transliteration);
   if (translit.length) {
     gap(16 * s);
     label("Transliteration");
     add(translit, `italic ${14 * s}px 'Inter', sans-serif`, theme.text, 22 * s);
   }
-  const meaning = split(dua.translation).join(" ");
+  const meaning = show.matlab === false ? "" : split(dua.translation).join(" ");
   if (meaning) {
     gap(16 * s);
     label("Matlab");
     add([meaning], `500 ${14 * s}px 'Inter', sans-serif`, theme.muted, 22 * s);
   }
+  const english = show.english ? split(dua.translationEn).join(" ") : "";
+  if (english) {
+    gap(16 * s);
+    label("English");
+    add([english], `400 ${13 * s}px 'Inter', sans-serif`, theme.muted, 21 * s);
+  }
+  if (dua.source) {
+    gap(14 * s);
+    add([dua.source + (dua.verified ? "  ✓" : "")], `600 ${12 * s}px 'Inter', sans-serif`, theme.gold, 20 * s);
+  }
   return { rows, height: rows.reduce((sum, r) => sum + r.h, 0) };
 }
 
-export async function renderDuaImage(dua, { theme: themeId = "emerald", size: sizeId = "fit" } = {}) {
+export async function renderDuaImage(dua, { theme: themeId = "emerald", size: sizeId = "fit", show = {} } = {}) {
   await document.fonts.ready;
   const theme = CARD_THEMES[themeId] || CARD_THEMES.emerald;
   const size = CARD_SIZES[sizeId] || CARD_SIZES.fit;
@@ -78,14 +88,14 @@ export async function renderDuaImage(dua, { theme: themeId = "emerald", size: si
   const arabicScale = parseFloat(root.getPropertyValue("--arabic-scale")) || 1;
 
   const W = size.w;
-  let lay = layout(dua, W, 1, arabicFont, arabicScale, theme);
+  let lay = layout(dua, W, 1, arabicFont, arabicScale, theme, show);
   let H;
   if (size.h) {
     H = size.h;
     const room = H - PAD * 2 - FOOTER;
     // Shrink long duas to fit; let short duas grow a little to fill the card.
     for (let next = 1.35; next >= 0.45; next -= 0.05) {
-      const l = layout(dua, W, next, arabicFont, arabicScale, theme);
+      const l = layout(dua, W, next, arabicFont, arabicScale, theme, show);
       lay = l;
       if (l.height <= room) break;
     }
