@@ -24,7 +24,18 @@ export function todaysDua(duas, day) {
   return from[dayNumber % from.length];
 }
 
-export const splitLines = (text = "") => text.split("\n").map((l) => l.trim()).filter(Boolean);
+/**
+ * True when Arabic text is missing most of its harakat (vowel marks), e.g.
+ * "لا إله إلا الله" instead of "لَا إِلَٰهَ إِلَّا اللَّهُ". Tajweed markers and
+ * memorizing need the marks, so the app offers to add them.
+ */
+export function needsHarakat(text = "") {
+  const letters = (text.match(/[ء-ي]/g) || []).length;
+  const marks = (text.match(/[ً-ْٰ]/g) || []).length;
+  return letters >= 6 && marks / letters < 0.35;
+}
+
+export const splitLines =(text = "") => text.split("\n").map((l) => l.trim()).filter(Boolean);
 
 const pad = (n) => String(n).padStart(2, "0");
 /** Local-time YYYY-MM-DD (not UTC, so "today" flips at the user's midnight). */

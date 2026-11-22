@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { CATEGORIES, MOODS } from "../constants";
 import { T, FONT, card, chip, column, h1, iconButton, input, label, page, primaryButton, secondaryButton, segOption, segTrack } from "../theme/tokens";
 import { BackIcon } from "../library/icons";
+import { needsHarakat } from "../library/duaUtils";
 
 const Spinner = ({ size = 16 }) => (
   <span
@@ -41,10 +42,23 @@ export default function AddEditView({
   addMode, setAddMode,
   screenshot, setScreenshot,
   extracting, extractError,
-  fileRef, handleScreenshot, handlePasteExtract, handleSave,
+  fileRef, handleScreenshot, handlePasteExtract, handleSave, onAddHarakat,
   onBack,
 }) {
   const [pasteText, setPasteText] = useState("");
+  const [fixing, setFixing] = useState(false);
+  const [fixError, setFixError] = useState("");
+
+  const fixHarakat = async () => {
+    setFixing(true);
+    setFixError("");
+    try {
+      await onAddHarakat(arabic);
+    } catch (err) {
+      setFixError(err.message || "Could not add harakat. Try again.");
+    }
+    setFixing(false);
+  };
   const cameraRef = useRef(null);
   const editing = editIdx !== null;
   const canSave = arabic.trim() && !extracting;
@@ -169,6 +183,21 @@ export default function AddEditView({
             <label style={label} htmlFor="dua-arabic">Arabic</label>
             <textarea id="dua-arabic" rows={3} placeholder="بِسْمِ اللَّهِ" value={arabic} onChange={(e) => setArabic(e.target.value)} style={arabicInput} />
             <span style={{ fontSize: "12px", color: T.muted }}>Start a new line for each part of the dua</span>
+            {needsHarakat(arabic) && !extracting && (
+              <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "8px", padding: "12px", borderRadius: "14px", background: T.warmBg, color: T.warmText, fontSize: "13px" }}>
+                <span>This Arabic is missing most of its harakat (zabar, zer, pesh, shadda, madd). Reading, tajweed and memorizing work best with full harakat.</span>
+                <button type="button" onClick={fixHarakat} disabled={fixing} style={{ ...secondaryButton, height: "40px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", opacity: fixing ? 0.7 : 1 }}>
+                  {fixing ? (
+                    <>
+                      <Spinner /> Adding harakat…
+                    </>
+                  ) : (
+                    "✨ Add harakat with AI"
+                  )}
+                </button>
+                {fixError && <span style={{ color: T.danger }}>{fixError}</span>}
+              </div>
+            )}
           </div>
           <div>
             <label style={label} htmlFor="dua-translit">Transliteration</label>

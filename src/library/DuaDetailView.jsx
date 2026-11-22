@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import ShareSheet from "./ShareSheet";
 import TajweedText from "../components/TajweedText";
 import { FONT_SERIF, chip, column, iconBtn, page, tile } from "./theme";
-import { RECALL_TARGET, categoryLabel, duaMoods, isLearnt, recitedToday, splitLines } from "./duaUtils";
+import { RECALL_TARGET, categoryLabel, duaMoods, isLearnt, needsHarakat, recitedToday, splitLines } from "./duaUtils";
 import { MOODS } from "../constants";
 import { BackIcon, CheckIcon, CopyIcon, EditIcon, Medallion, MemorizeIcon, ShareIcon, SpeakerIcon, StarPattern, TrashIcon } from "./icons";
 
@@ -218,6 +218,17 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
             </button>
           </div>
         </section>
+
+        {needsHarakat(dua.arabic) && (
+          <button
+            type="button"
+            onClick={onEdit}
+            style={{ display: "flex", flexDirection: "column", gap: "4px", textAlign: "left", padding: "12px 14px", borderRadius: "16px", border: "none", background: L.tagBg, color: L.tagText, fontSize: "13px", fontFamily: "var(--font-ui)", cursor: "pointer" }}
+          >
+            <strong style={{ fontWeight: 600 }}>Harakat missing</strong>
+            <span>This dua has few vowel marks, so tajweed markers can't show. Tap to add them with AI.</span>
+          </button>
+        )}
 
         {!learnt && (dua.recall || 0) > 0 && (
           <p style={{ margin: 0, fontSize: "12px", color: L.muted }}>

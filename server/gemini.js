@@ -14,12 +14,14 @@ const MOOD_IDS = "anxious, sad, grateful, forgive, unwell, need, sleep, travel, 
 const OUTPUT_FIELDS = `- "title": short descriptive title in English (e.g. "Dua Before Sleeping")
 - "category": classify the dua into ONE of these categories: ${CATEGORY_IDS}
 - "moods": array of 1 to 3 situations or feelings this dua is for, chosen ONLY from: ${MOOD_IDS} (e.g. ["anxious"] for a dua against worry, ["forgive"] for istighfar)
-- "arabic": full Arabic text with all diacritics (tashkeel) preserved. Use \\n to separate lines.
+- "arabic": the dua in Arabic with COMPLETE, correct tashkeel on every letter — fatha, kasra, damma, sukoon, shadda, tanween, maddah (آ / ~), dagger alif (ٰ) and hamza. Keep the same words and word order as the source. If the source text has missing or partial diacritics, ADD the correct full tashkeel — never return bare, undiacritized Arabic. For Quran verses and well-known duas, use the standard authentic wording with full diacritics. Use \\n to separate lines.
 - "transliteration": COMPLETE Roman Urdu transliteration of EVERY Arabic word. Same number of \\n breaks as arabic. Never skip or truncate any word. Use phonetics like aa, ee, oo, kh, gh.
 - "translation": Roman Urdu meaning. Same number of \\n breaks as arabic.`;
 
 const STRICT_RULES = `STRICT RULES:
 - Return ONLY valid JSON — no markdown, no backticks, no explanation
+- Include ONLY the dua itself. Leave out everything around it: headings, captions, labels, watermarks, page or channel names, hashtags, and add-on phrases such as "صدقة جارية" / "Sadqa Jariya", "share", "Ameen", "Subhan Allah" stickers or "copy" notes
+- Every Arabic letter must carry its vowel mark (tashkeel); a letter with shadda carries both shadda and its vowel
 - transliteration must cover every single Arabic word — NEVER cut short
 - Translation MUST be in Roman Urdu (not English, not Urdu script)
 - category MUST be one of: ${CATEGORY_IDS}`;
@@ -30,7 +32,7 @@ STEP 1 — VALIDATION: Does this image contain an Islamic dua, Quranic verse, or
 - If NO (e.g. it is a selfie, landscape, food photo, meme, screenshot of a chat, or any image without Arabic dua text): return ONLY this JSON: {"error": "not_a_dua", "message": "This image does not contain a dua or Arabic supplication. Please upload a screenshot of an Islamic dua."}
 - If YES: proceed to Step 2.
 
-STEP 2 — EXTRACTION: Return ONLY a JSON object with these exact fields (copy the Arabic exactly as shown in the image):
+STEP 2 — EXTRACTION: Read the dua's Arabic words exactly as shown in the image (same words, same order), then return ONLY a JSON object with these exact fields:
 ${OUTPUT_FIELDS}
 
 ${STRICT_RULES}
@@ -42,7 +44,7 @@ const textPrompt = (text) => `You are an Islamic scholar and Arabic linguist. Th
 ${text}
 """
 
-Analyze this text carefully and return ONLY a JSON object with these exact fields (if the input is already Arabic, use it as-is with corrections if needed):
+Analyze this text carefully and return ONLY a JSON object with these exact fields (if the input is already Arabic, keep its words, fix mistakes, and add full tashkeel where it is missing):
 ${OUTPUT_FIELDS}
 
 ${STRICT_RULES}
@@ -60,7 +62,10 @@ async function callGemini(apiKey, parts) {
     res = await fetch(`${ENDPOINT}?key=${apiKey}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents: [{ parts }] }),
+      body: JSON.stringify({
+        contents: [{ parts }],
+        generationConfig: { temperature: 0.2, responseMimeType: "application/json" },
+      }),
     });
   } catch {
     return fail(502, "network_error", "Could not reach Gemini API. Try again.");

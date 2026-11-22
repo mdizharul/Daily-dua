@@ -156,6 +156,15 @@ export default function App() {
   };
 
   /* ── Paste text extract ── */
+  /* ── Add missing harakat: sends only the Arabic, replaces only the Arabic ── */
+  const addHarakat = async (text) => {
+    const result = await extractDuaFromText(text);
+    if (!result.arabic) throw new Error("Could not add harakat. Try again.");
+    setArabic(result.arabic);
+    if (!translit.trim() && result.transliteration) setTranslit(result.transliteration);
+    if (!translation.trim() && result.translation) setTrans(result.translation);
+  };
+
   const handlePasteExtract = async (pastedText) => {
     if (!pastedText.trim()) return;
     setExtracting(true);
@@ -384,6 +393,7 @@ export default function App() {
         handleScreenshot={handleScreenshot}
         handlePasteExtract={handlePasteExtract}
         handleSave={handleSave}
+        onAddHarakat={addHarakat}
         onBack={leaveForm}
       />
       {nav}
