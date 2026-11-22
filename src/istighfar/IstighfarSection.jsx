@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { C, FONT } from "./theme";
+import { useBackHandler } from "../hooks/useBackHandler";
 import CounterScreen from "./CounterScreen";
 import HistoryScreen from "./HistoryScreen";
 import GoalSettingsScreen from "./GoalSettingsScreen";
@@ -14,6 +15,7 @@ export default function IstighfarSection({ tracker }) {
   const [pocket, setPocket] = useState(false);
   const exitPocket = useCallback(() => setPocket(false), []);
   const toCounter = () => setScreen("counter");
+  useBackHandler(screen !== "counter", toCounter);
 
   let content;
   if (screen === "history") content = <HistoryScreen tracker={tracker} onBack={toCounter} />;

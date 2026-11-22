@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Daily Dua app icon: half crescent moon, half tasbih beads, with a small star -->
+  <!-- Daily Dua app icon (full-bleed): crescent moon + tasbih beads + star -->
   <defs>
     <linearGradient id="bg" x1="0.1" y1="0" x2="0.9" y2="1">
       <stop offset="0" stop-color="#26335F"/>
@@ -22,25 +22,27 @@
     </mask>
   </defs>
 
-  <rect width="512" height="512" rx="114" fill="url(#bg)"/>
+  <rect width="512" height="512" fill="url(#bg)"/>
   <circle cx="256" cy="256" r="215" fill="url(#glow)"/>
 
-  <!-- crescent -->
-  <rect width="512" height="512" fill="url(#gold)" mask="url(#moon)"/>
-  <!-- tasbih beads closing the ring -->
-  <g fill="url(#gold)">
-    <circle cx="316.0" cy="142.9" r="10"/>
-    <circle cx="338.0" cy="159.0" r="10"/>
-    <circle cx="356.2" cy="179.3" r="10"/>
-    <circle cx="369.8" cy="202.9" r="10"/>
-    <circle cx="378.2" cy="228.9" r="10"/>
-    <circle cx="381.0" cy="256.0" r="10"/>
-    <circle cx="378.2" cy="283.1" r="10"/>
-    <circle cx="369.8" cy="309.1" r="10"/>
-    <circle cx="356.2" cy="332.7" r="10"/>
-    <circle cx="338.0" cy="353.0" r="10"/>
-    <circle cx="316.0" cy="369.1" r="10"/>
-  </g>
-  <!-- four-point star -->
-  <path fill="url(#gold)" d="M290 224 C294 248 300 252 322 256 C300 260 294 264 290 288 C286 264 280 260 258 256 C280 252 286 248 290 224 Z"/>
+  <g transform="translate(256 256) scale(1.22) translate(-251 -256)">
+    <!-- crescent -->
+    <rect width="512" height="512" fill="url(#gold)" mask="url(#moon)"/>
+    <!-- tasbih beads closing the ring -->
+    <g fill="url(#gold)">
+      <circle cx="316.0" cy="142.9" r="10"/>
+      <circle cx="338.0" cy="159.0" r="10"/>
+      <circle cx="356.2" cy="179.3" r="10"/>
+      <circle cx="369.8" cy="202.9" r="10"/>
+      <circle cx="378.2" cy="228.9" r="10"/>
+      <circle cx="381.0" cy="256.0" r="10"/>
+      <circle cx="378.2" cy="283.1" r="10"/>
+      <circle cx="369.8" cy="309.1" r="10"/>
+      <circle cx="356.2" cy="332.7" r="10"/>
+      <circle cx="338.0" cy="353.0" r="10"/>
+      <circle cx="316.0" cy="369.1" r="10"/>
+    </g>
+    <!-- four-point star -->
+    <path fill="url(#gold)" d="M290 224 C294 248 300 252 322 256 C300 260 294 264 290 288 C286 264 280 260 258 256 C280 252 286 248 290 224 Z"/>
+    </g>
 </svg>

@@ -6,6 +6,7 @@ import { extractDuaFromImage, extractDuaFromText } from "./services/extractApi";
 import { lookupVerse, matchesVerse, verifyQuranRef } from "./services/quran";
 import { SAMPLE_DUAS, ARABIC_SCRIPTS, MOOD_IDS } from "./constants";
 import useTheme from "./hooks/useTheme";
+import { runBackHandler } from "./hooks/useBackHandler";
 import SettingsView from "./views/SettingsView";
 import AddEditView from "./views/AddEditView";
 import BottomNav from "./components/BottomNav";
@@ -351,6 +352,54 @@ export default function App() {
   const changeFontSize = (v) => { setArabicFontSize(v); saveFontSize(v); };
 
   const startEdit = (id) => handleEdit(duas.findIndex((d) => d.id === id));
+
+  /* ── Phone back gesture: step back inside the app instead of leaving it ── */
+  const goBack = () => {
+    if (runBackHandler()) return true; // share sheet, Pocket mode, Dhikr sub-screens
+    if (section !== "library") {
+      setSection("library");
+      return true;
+    }
+    if (view === "add" || view === "edit" || view === "settings") {
+      const editingId = editIdx !== null ? duas[editIdx]?.id : null;
+      resetForm();
+      setEditIdx(null);
+      if (editingId != null) {
+        setSelectedId(editingId);
+        setView("dua");
+      } else setView("home");
+      return true;
+    }
+    if (view === "dua") {
+      backToLibrary();
+      return true;
+    }
+    if (libFilters.searchOpen || libFilters.routineOnly || libFilters.mood !== "all") {
+      setLibFilters((f) => ({ ...f, search: "", searchOpen: false, routineOnly: false, mood: "all" }));
+      return true;
+    }
+    return false; // on the Library home: let the app close
+  };
+  const goBackRef = useRef(goBack);
+  useEffect(() => {
+    goBackRef.current = goBack;
+  });
+
+  useEffect(() => {
+    // One extra history entry acts as a guard: a back gesture lands on it,
+    // we handle it in the app and put the guard back.
+    window.history.pushState({ dailyDua: true }, "");
+    const onPop = () => {
+      if (goBackRef.current()) {
+        window.history.pushState({ dailyDua: true }, "");
+        window.scrollTo(0, 0);
+      } else {
+        window.history.back(); // nothing to go back to inside the app: leave
+      }
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   if (loading) return <div style={{ minHeight: "100svh", background: "var(--bg)" }} />;
 

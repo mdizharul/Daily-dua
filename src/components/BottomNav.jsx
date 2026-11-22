@@ -3,8 +3,8 @@ import { BeadsIcon, LibraryIcon, MemorizeIcon } from "../library/icons";
 
 const ITEMS = [
   { id: "library", label: "Library", Icon: LibraryIcon },
-  { id: "memorize", label: "Memorize", Icon: MemorizeIcon },
   { id: "istighfar", label: "Dhikr", Icon: BeadsIcon },
+  { id: "memorize", label: "Memorize", Icon: MemorizeIcon },
 ];
 
 /** App-wide bottom navigation, same look on every tab. */

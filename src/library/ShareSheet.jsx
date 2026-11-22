@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { T, FONT, h2, primaryButton, secondaryButton, segOption, segTrack } from "../theme/tokens";
 import { CARD_SIZES, CARD_THEMES, renderDuaImage, saveImage, shareImage } from "../utils/shareAsImage";
+import { useBackHandler } from "../hooks/useBackHandler";
 
 const STYLE_KEY = "share-card-style";
 
@@ -20,6 +21,7 @@ export default function ShareSheet({ dua, show, night, onClose }) {
   const [blob, setBlob] = useState(null);
   const [url, setUrl] = useState(null);
   const [status, setStatus] = useState("");
+  useBackHandler(true, onClose);
 
   // Build on the latest choice, so quick taps (theme then size) don't undo each other.
   const setStyle = (patch) => {

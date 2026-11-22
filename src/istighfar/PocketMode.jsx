@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { C, FONT, FONT_NUM } from "./theme";
 import { formatNumber } from "./data";
+import { useBackHandler } from "../hooks/useBackHandler";
 import { CloseIcon, MoonIcon } from "./icons";
 
 const HOLD_MS = 900;
@@ -11,6 +12,7 @@ export default function PocketMode({ label, count, goal, strongBuzzEvery, onAdd,
   const [holding, setHolding] = useState(false);
   const [awake, setAwake] = useState(false);
   const holdTimer = useRef(null);
+  useBackHandler(true, onExit);
 
   // Keep the screen on while counting (Screen Wake Lock API; not every browser has it).
   useEffect(() => {
