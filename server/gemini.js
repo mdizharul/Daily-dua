@@ -9,9 +9,11 @@ const MODEL = "gemini-2.5-flash";
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
 const CATEGORY_IDS = "daily, protection, health, rizq, sleep, travel, meals, morning, evening, general";
+const MOOD_IDS = "anxious, sad, grateful, forgive, unwell, need, sleep, travel, morning, evening";
 
 const OUTPUT_FIELDS = `- "title": short descriptive title in English (e.g. "Dua Before Sleeping")
 - "category": classify the dua into ONE of these categories: ${CATEGORY_IDS}
+- "moods": array of 1 to 3 situations or feelings this dua is for, chosen ONLY from: ${MOOD_IDS} (e.g. ["anxious"] for a dua against worry, ["forgive"] for istighfar)
 - "arabic": full Arabic text with all diacritics (tashkeel) preserved. Use \\n to separate lines.
 - "transliteration": COMPLETE Roman Urdu transliteration of EVERY Arabic word. Same number of \\n breaks as arabic. Never skip or truncate any word. Use phonetics like aa, ee, oo, kh, gh.
 - "translation": Roman Urdu meaning. Same number of \\n breaks as arabic.`;

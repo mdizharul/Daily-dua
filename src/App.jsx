@@ -3,7 +3,7 @@ import { loadDuas, saveDuas, loadTajweedMode, loadFontSize, saveFontSize, loadSt
 import hashImage from "./utils/hashImage";
 import prepareImage from "./utils/prepareImage";
 import { extractDuaFromImage, extractDuaFromText } from "./services/extractApi";
-import { SAMPLE_DUAS, ARABIC_SCRIPTS } from "./constants";
+import { SAMPLE_DUAS, ARABIC_SCRIPTS, MOOD_IDS } from "./constants";
 import useTheme from "./hooks/useTheme";
 import SettingsView from "./views/SettingsView";
 import AddEditView from "./views/AddEditView";
@@ -14,7 +14,7 @@ import LibraryView from "./library/LibraryView";
 import DuaDetailView from "./library/DuaDetailView";
 import MemorizeView from "./library/MemorizeView";
 import { getLibraryTheme } from "./library/theme";
-import { RECALL_TARGET, todayKey } from "./library/duaUtils";
+import { RECALL_TARGET, duaMoods, todayKey } from "./library/duaUtils";
 
 const SECTION_KEY = "app-section"; // "library" | "memorize" | "istighfar"
 function loadSection() {
@@ -42,7 +42,7 @@ export default function App() {
   const [loading, setLoading]     = useState(true);
   const [view, setView]           = useState("home");
   const [editIdx, setEditIdx]     = useState(null);
-  const [libFilters, setLibFilters] = useState({ tab: "learn", category: "all", search: "", searchOpen: false });
+  const [libFilters, setLibFilters] = useState({ tab: "learn", mood: "all", routineOnly: false, search: "", searchOpen: false });
   const [selectedId, setSelectedId] = useState(null); // dua shown on the dua page
   const [memorize, setMemorize] = useState({ focusId: null, fromDua: false, session: 0 });
   const [scriptMode, setScriptModeState] = useState("indopak");
@@ -54,7 +54,7 @@ export default function App() {
   const [arabic, setArabic]       = useState("");
   const [translit, setTranslit]   = useState("");
   const [translation, setTrans]   = useState("");
-  const [selectedTags, setSelectedTags] = useState([]);
+  const [selectedMoods, setSelectedMoods] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("general");
   const [addMode, setAddMode] = useState("screenshot");
 
@@ -110,7 +110,7 @@ export default function App() {
   }, [scriptMode]);
 
   /* ── Form reset ── */
-  const resetForm = () => { setTitle(""); setArabic(""); setTranslit(""); setTrans(""); setSelectedTags([]); setSelectedCategory("general"); setScreenshot(null); setExtractError(null); setExtracting(false); setAddMode("screenshot"); };
+  const resetForm = () => { setTitle(""); setArabic(""); setTranslit(""); setTrans(""); setSelectedMoods([]); setSelectedCategory("general"); setScreenshot(null); setExtractError(null); setExtracting(false); setAddMode("screenshot"); };
 
   /* ── Screenshot upload with duplicate + validation ── */
   const handleScreenshot = async (e) => {
@@ -145,6 +145,8 @@ export default function App() {
         setTranslit(result.transliteration || "");
         setTrans(result.translation || "");
         if (result.category) setSelectedCategory(result.category);
+      if (Array.isArray(result.moods)) setSelectedMoods(result.moods.filter((m) => MOOD_IDS.includes(m)));
+        if (Array.isArray(result.moods)) setSelectedMoods(result.moods.filter((m) => MOOD_IDS.includes(m)));
       } catch (err) {
         setScreenshot(null); // clear preview on error so user can try again
         setExtractError(err.message || "Could not extract. Fill in manually.");
@@ -165,6 +167,7 @@ export default function App() {
       setTranslit(result.transliteration || "");
       setTrans(result.translation || "");
       if (result.category) setSelectedCategory(result.category);
+      if (Array.isArray(result.moods)) setSelectedMoods(result.moods.filter((m) => MOOD_IDS.includes(m)));
     } catch (err) {
       setExtractError(err.message || "Could not extract. Fill in manually.");
       setArabic(pastedText);
@@ -182,7 +185,11 @@ export default function App() {
       status: editIdx !== null ? duas[editIdx].status : "new",
       dateAdded: editIdx !== null ? duas[editIdx].dateAdded : new Date().toISOString().slice(0, 10),
       category: selectedCategory,
-      tags: selectedTags,
+      tags: editIdx !== null ? duas[editIdx].tags || [] : [],
+      moods: selectedMoods,
+      routine: editIdx !== null ? Boolean(duas[editIdx].routine) : false,
+      recites: editIdx !== null ? duas[editIdx].recites : undefined,
+      recall: editIdx !== null ? duas[editIdx].recall : undefined,
       reciteCount: editIdx !== null ? (duas[editIdx].reciteCount || 0) : 0,
     };
     if (editIdx !== null) { const u = [...duas]; u[editIdx] = obj; setDuas(u); }
@@ -195,7 +202,7 @@ export default function App() {
   const handleEdit = (idx) => {
     const d = duas[idx];
     setTitle(d.title); setArabic(d.arabic); setTranslit(d.transliteration); setTrans(d.translation);
-    setSelectedTags(d.tags || []);
+    setSelectedMoods(duaMoods(d));
     setSelectedCategory(d.category || "general");
     setEditIdx(idx); setView("edit");
   };
@@ -228,6 +235,8 @@ export default function App() {
     setDuas((list) => list.filter((d) => d.id !== id));
     backToLibrary();
   };
+
+  const toggleRoutine = (dua) => updateDua(dua.id, { routine: !dua.routine });
 
   const toggleLearnt = (dua) =>
     updateDua(dua.id, dua.status === "memorized" ? { status: "learning", recall: 0 } : { status: "memorized", recall: RECALL_TARGET });
@@ -298,6 +307,7 @@ export default function App() {
         onDelete={() => deleteDua(selected.id)}
         onRecite={() => handleRecite(selected.id)}
         onToggleLearnt={() => toggleLearnt(selected)}
+        onToggleRoutine={() => toggleRoutine(selected)}
         onMemorize={() => startMemorize(selected.id, true)}
       />
       {nav}
@@ -362,6 +372,8 @@ export default function App() {
         setTrans={setTrans}
         selectedCategory={selectedCategory}
         setSelectedCategory={setSelectedCategory}
+        selectedMoods={selectedMoods}
+        setSelectedMoods={setSelectedMoods}
         addMode={addMode}
         setAddMode={setAddMode}
         screenshot={screenshot}

@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import ShareSheet from "./ShareSheet";
 import TajweedText from "../components/TajweedText";
 import { FONT_SERIF, chip, column, iconBtn, page, tile } from "./theme";
-import { RECALL_TARGET, categoryLabel, isLearnt, recitedToday, splitLines } from "./duaUtils";
+import { RECALL_TARGET, categoryLabel, duaMoods, isLearnt, recitedToday, splitLines } from "./duaUtils";
+import { MOODS } from "../constants";
 import { BackIcon, CheckIcon, CopyIcon, EditIcon, Medallion, MemorizeIcon, ShareIcon, SpeakerIcon, StarPattern, TrashIcon } from "./icons";
 
 const SIZES = [
@@ -16,7 +17,7 @@ const SIZES = [
 const isLongDua = (dua) =>
   splitLines(dua.arabic).length > 3 || dua.arabic.length > 160 || (dua.transliteration || "").length + (dua.translation || "").length > 420;
 
-export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, onBack, onEdit, onDelete, onRecite, onToggleLearnt, onMemorize }) {
+export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, onBack, onEdit, onDelete, onRecite, onToggleLearnt, onToggleRoutine, onMemorize }) {
   const [showTranslit, setShowTranslit] = useState(true);
   const [showMeaning, setShowMeaning] = useState(true);
   const [speaking, setSpeaking] = useState(false);
@@ -154,7 +155,9 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
             </button>
           )}
 
-          <span style={{ position: "relative", fontSize: "13px", color: L.heroMuted }}>{categoryLabel(dua)}</span>
+          <span style={{ position: "relative", fontSize: "13px", color: L.heroMuted }}>
+            {[categoryLabel(dua), ...duaMoods(dua).map((id) => MOODS.find((m) => m.id === id)?.label)].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(" · ")}
+          </span>
         </article>
 
         {/* What to show + listen + text size */}
@@ -181,8 +184,9 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
           </span>
         </div>
 
-        {/* Recited today */}
-        <section style={{ background: L.card, border: `1px solid ${L.border}`, borderRadius: "20px", padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+        {/* Recited today + Daily routine */}
+        <section style={{ background: L.card, border: `1px solid ${L.border}`, borderRadius: "20px", padding: "4px 16px", display: "flex", flexDirection: "column" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", padding: "10px 0", borderBottom: `1px solid ${L.track}` }}>
           <span style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
             <span style={{ fontSize: "14px", fontWeight: 600 }}>Recited today</span>
             <span style={{ fontSize: "12px", color: L.muted }}>
@@ -196,6 +200,23 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
           >
             {today} ×
           </button>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", padding: "12px 0" }}>
+            <span style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              <span style={{ fontSize: "14px", fontWeight: 600 }}>Daily routine</span>
+              <span style={{ fontSize: "12px", color: L.muted }}>Show in “Today's routine” to recite every day</span>
+            </span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={Boolean(dua.routine)}
+              aria-label="Daily routine"
+              onClick={onToggleRoutine}
+              style={{ width: "50px", height: "30px", borderRadius: "999px", background: dua.routine ? L.accent : "var(--radio-off)", border: "none", cursor: "pointer", position: "relative", flexShrink: 0, transition: "background 0.2s" }}
+            >
+              <span style={{ position: "absolute", top: "3px", left: dua.routine ? "23px" : "3px", width: "24px", height: "24px", borderRadius: "999px", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.3)", transition: "left 0.2s" }} />
+            </button>
+          </div>
         </section>
 
         {!learnt && (dua.recall || 0) > 0 && (

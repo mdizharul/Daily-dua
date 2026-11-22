@@ -1,4 +1,28 @@
-import { CATEGORY_MAP } from "../constants";
+import { CATEGORY_MAP, CATEGORY_MOODS, MOOD_IDS } from "../constants";
+
+/** Moods of a dua: its own list, or one derived from its category for older duas. */
+export const duaMoods = (dua) =>
+  Array.isArray(dua.moods) && dua.moods.length ? dua.moods.filter((m) => MOOD_IDS.includes(m)) : CATEGORY_MOODS[dua.category] || [];
+
+/** Duas in the user's daily routine, and how many were recited today. */
+export function routineStats(duas, day) {
+  const list = duas.filter((d) => d.routine);
+  const done = list.filter((d) => (d.recites?.[day] || 0) > 0).length;
+  return { list, total: list.length, done };
+}
+
+/**
+ * Today's dua: changes once a day, same all day. Picks from duas still being
+ * learnt (or all duas if everything is learnt), in a stable order.
+ */
+export function todaysDua(duas, day) {
+  const pool = duas.filter((d) => d.status !== "memorized");
+  const from = (pool.length ? pool : duas).slice().sort((a, b) => String(a.id).localeCompare(String(b.id)));
+  if (!from.length) return null;
+  const [y, m, d] = day.split("-").map(Number);
+  const dayNumber = Math.floor(Date.UTC(y, m - 1, d) / 86400000);
+  return from[dayNumber % from.length];
+}
 
 export const splitLines = (text = "") => text.split("\n").map((l) => l.trim()).filter(Boolean);
 

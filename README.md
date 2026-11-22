@@ -4,9 +4,11 @@ Screenshot duas from Instagram & YouTube (or paste the Arabic text) → AI (Goog
 Gemini) extracts the Arabic, Roman-Urdu transliteration and translation → track
 your memorization.
 
-**Features:** screenshot & paste-text extraction with auto-category · Library
-with To learn / Learnt, search and category filters · a page per dua (listen,
-recited-today counter, mark learnt, share as image) · Memorize mode: Read, Fill
+**Features:** photo / screenshot / paste-text extraction with auto-category
+and moods · Library with Today's routine (duas you recite daily, with progress),
+Today's dua, "How is your heart today?" mood filters, To learn / Learnt and
+search · a page per dua (listen, recited-today counter, daily routine, mark
+learnt, share card in 4 themes × fit / square / tall) · Memorize mode: Read, Fill
 blanks, From memory — 5 correct recalls marks a dua learnt · daily streak ·
 Day / Night appearance · tajweed markers · Arabic script & size · JSON
 backup export & import. One design across the app (the Dhikr look: cream, green,

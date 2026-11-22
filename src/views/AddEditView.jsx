@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { CATEGORIES } from "../constants";
+import { CATEGORIES, MOODS } from "../constants";
 import { T, FONT, card, chip, column, h1, iconButton, input, label, page, primaryButton, secondaryButton, segOption, segTrack } from "../theme/tokens";
 import { BackIcon } from "../library/icons";
 
@@ -37,6 +37,7 @@ export default function AddEditView({
   editIdx,
   title, setTitle, arabic, setArabic, translit, setTranslit, translation, setTrans,
   selectedCategory, setSelectedCategory,
+  selectedMoods = [], setSelectedMoods,
   addMode, setAddMode,
   screenshot, setScreenshot,
   extracting, extractError,
@@ -189,6 +190,27 @@ export default function AddEditView({
             ))}
           </div>
           <span style={{ fontSize: "12px", color: T.muted, fontFamily: FONT }}>AI picks one for you — change it if needed</span>
+        </section>
+
+        <section style={{ ...card, display: "flex", flexDirection: "column", gap: "10px" }}>
+          <span style={{ ...label, marginBottom: 0 }}>When is this dua for?</span>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            {MOODS.map((m) => {
+              const on = selectedMoods.includes(m.id);
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setSelectedMoods(on ? selectedMoods.filter((x) => x !== m.id) : [...selectedMoods, m.id])}
+                  style={chip(on)}
+                >
+                  {m.label}
+                </button>
+              );
+            })}
+          </div>
+          <span style={{ fontSize: "12px", color: T.muted, fontFamily: FONT }}>Shown under “How is your heart today?” in your Library. Pick any that fit.</span>
         </section>
 
         <button type="button" onClick={handleSave} disabled={!canSave} style={primaryButton(Boolean(canSave))}>
