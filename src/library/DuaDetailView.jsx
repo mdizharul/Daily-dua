@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import ShareSheet from "./ShareSheet";
 import TajweedText from "../components/TajweedText";
 import { FONT_SERIF, chip, column, iconBtn, page, tile } from "./theme";
-import { RECALL_TARGET, categoryLabel, duaMoods, isLearnt, needsHarakat, recitedToday, splitLines } from "./duaUtils";
+import { RECALL_TARGET, categoryLabel, duaMeaning, duaMoods, duaTitle, isLearnt, needsHarakat, recitedToday, repeatTarget, splitLines } from "./duaUtils";
+import { useLang } from "../hooks/useLang";
 import { MOODS } from "../constants";
 import { BackIcon, CheckIcon, CopyIcon, EditIcon, Medallion, MemorizeIcon, ShareIcon, SpeakerIcon, StarPattern, TrashIcon } from "./icons";
 
@@ -16,9 +17,10 @@ const SIZES = [
 const SHOW_KEY = "card-show";
 const loadShow = () => {
   try {
-    return { translit: true, matlab: true, english: false, ...JSON.parse(localStorage.getItem(SHOW_KEY) || "{}") };
+    const saved = JSON.parse(localStorage.getItem(SHOW_KEY) || "{}");
+    return { translit: saved.translit !== false, meaning: saved.meaning ?? saved.matlab ?? true };
   } catch {
-    return { translit: true, matlab: true, english: false };
+    return { translit: true, meaning: true };
   }
 };
 
@@ -40,12 +42,15 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
       return next;
     });
   const showTranslit = show.translit;
-  const showMeaning = show.matlab;
+  const showMeaning = show.meaning;
+  const lang = useLang();
+  const title = duaTitle(dua, lang);
+  const meaning = duaMeaning(dua, lang);
   const [speaking, setSpeaking] = useState(false);
   const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [sharing, setSharing] = useState(false);
-  const closeShare = useCallback(() => setSharing(false), []);
+  const closeShare = useCallback(() => setSharing(false), [setSharing]);
   const long = isLongDua(dua);
   const collapsed = long && !expanded;
 
@@ -54,10 +59,9 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
 
   const aLines = splitLines(dua.arabic);
   const tLines = splitLines(dua.transliteration);
-  const mLines = splitLines(dua.translation);
-  const eLines = splitLines(dua.translationEn);
-  const showEnglish = show.english && eLines.length > 0;
-  const shareShow = useMemo(() => ({ translit: showTranslit, matlab: showMeaning, english: showEnglish }), [showTranslit, showMeaning, showEnglish]);
+  const mText = splitLines(meaning.text).join(" ");
+  const shareShow = useMemo(() => ({ translit: showTranslit, meaning: showMeaning, lang }), [showTranslit, showMeaning, lang]);
+  const repeat = repeatTarget(dua);
   const learnt = isLearnt(dua);
   const today = recitedToday(dua);
 
@@ -86,7 +90,7 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
   };
 
   const copy = () => {
-    const text = [dua.title, dua.arabic, dua.transliteration, dua.translation].filter(Boolean).join("\n\n");
+    const text = [title, dua.arabic, dua.transliteration, meaning.text].filter(Boolean).join("\n\n");
     navigator.clipboard?.writeText(text).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
@@ -103,7 +107,7 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
             <BackIcon />
           </button>
           {/* Full title, wrapping onto more lines instead of being cut off with "…" */}
-          <h1 style={{ margin: 0, flex: 1, fontSize: "16px", fontWeight: 600, lineHeight: 1.3, textAlign: "center", overflowWrap: "anywhere" }}>{dua.title}</h1>
+          <h1 style={{ margin: 0, flex: 1, fontSize: "16px", fontWeight: 600, lineHeight: 1.3, textAlign: "center", overflowWrap: "anywhere" }}>{title}</h1>
           <button type="button" aria-label="Edit dua" onClick={onEdit} style={iconBtn(L)}>
             <EditIcon />
           </button>
@@ -152,25 +156,21 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
             </div>
           )}
 
-          {showTranslit && showMeaning && tLines.length > 0 && mLines.length > 0 && (
+          {showTranslit && showMeaning && tLines.length > 0 && mText && (
             <span aria-hidden="true" style={{ position: "relative", width: "64px", height: "1px", background: L.heroFrame }} />
           )}
 
-          {showMeaning && mLines.length > 0 && (
+          {showMeaning && mText && (
             <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "4px", alignItems: "center" }}>
-              <span style={label}>Matlab</span>
-              <p style={{ margin: 0, fontFamily: "var(--font-ui)", fontWeight: 500, fontSize: mLines.join(" ").length > 120 ? "14px" : "15px", lineHeight: 1.55, color: L.heroText }}>
-                “{mLines.join(" ")}”
+              <span style={label}>{meaning.label}</span>
+              <p style={{ margin: 0, fontFamily: "var(--font-ui)", fontWeight: 500, fontSize: mText.length > 120 ? "14px" : "15px", lineHeight: 1.55, color: L.heroText }}>
+                “{mText}”
               </p>
-            </div>
-          )}
-
-          {showEnglish && (
-            <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "4px", alignItems: "center" }}>
-              <span style={label}>English</span>
-              <p style={{ margin: 0, fontFamily: "var(--font-ui)", fontWeight: 400, fontSize: "14px", lineHeight: 1.55, color: L.heroMuted }}>
-                “{eLines.join(" ")}”
-              </p>
+              {meaning.fallback && (
+                <span style={{ fontSize: "12px", color: L.heroMuted }}>
+                  {lang === "en" ? "English meaning not added yet — edit to add it." : "Roman Hindi meaning not added yet — edit to add it."}
+                </span>
+              )}
             </div>
           )}
 
@@ -205,14 +205,9 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
           <button type="button" aria-pressed={showTranslit} onClick={() => setShow({ translit: !showTranslit })} style={chip(L, showTranslit)}>
             Transliteration
           </button>
-          <button type="button" aria-pressed={showMeaning} onClick={() => setShow({ matlab: !showMeaning })} style={chip(L, showMeaning)}>
-            Matlab
+          <button type="button" aria-pressed={showMeaning} onClick={() => setShow({ meaning: !showMeaning })} style={chip(L, showMeaning)}>
+            {lang === "en" ? "Meaning" : "Matlab"}
           </button>
-          {eLines.length > 0 && (
-            <button type="button" aria-pressed={show.english} onClick={() => setShow({ english: !show.english })} style={chip(L, show.english)}>
-              English
-            </button>
-          )}
           {/* Listen + size stay together; on narrow phones they wrap as a pair */}
           <span style={{ display: "flex", gap: "8px", marginLeft: "auto" }}>
             <button type="button" aria-label={speaking ? "Stop" : "Listen"} onClick={speak} style={{ ...chip(L, speaking), width: "40px", padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -233,17 +228,26 @@ export default function DuaDetailView({ L, dua, tajweed, fontSize, onFontSize, o
         <section style={{ background: L.card, border: `1px solid ${L.border}`, borderRadius: "20px", padding: "4px 16px", display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", padding: "10px 0", borderBottom: `1px solid ${L.track}` }}>
           <span style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-            <span style={{ fontSize: "14px", fontWeight: 600 }}>Recited today</span>
-            <span style={{ fontSize: "12px", color: L.muted }}>
-              Tap after each recitation · {dua.reciteCount || 0} total
+            <span style={{ fontSize: "14px", fontWeight: 600 }}>
+              Recited today{repeat > 1 && <span style={{ color: L.muted, fontWeight: 500 }}> · recite {repeat}×</span>}
             </span>
+            <span style={{ fontSize: "12px", color: L.muted }}>
+              {today >= repeat ? "✓ Done for today · " : "Tap after each recitation · "}
+              {dua.reciteCount || 0} total
+            </span>
+            {repeat > 1 && (
+              <span aria-hidden="true" style={{ marginTop: "4px", height: "6px", borderRadius: "999px", background: L.track, display: "flex", overflow: "hidden", maxWidth: "180px" }}>
+                <span style={{ width: `${Math.min(today / repeat, 1) * 100}%`, background: L.accent, borderRadius: "999px", transition: "width 0.2s" }} />
+              </span>
+            )}
           </span>
           <button
             type="button"
             onClick={onRecite}
             style={{ height: "44px", minWidth: "88px", padding: "0 14px", borderRadius: "14px", border: "none", background: L.primaryBg, color: L.primaryText, fontSize: "15px", fontWeight: 700, fontFamily: "var(--font-ui)", cursor: "pointer" }}
           >
-            {today} ×
+            {repeat > 1 ? `${today} / ${repeat}` : `${today} ×`}
+            {today >= repeat && " ✓"}
           </button>
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", padding: "12px 0" }}>

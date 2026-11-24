@@ -19,7 +19,7 @@ export default function IstighfarSection({ tracker }) {
 
   let content;
   if (screen === "history") content = <HistoryScreen tracker={tracker} onBack={toCounter} />;
-  else if (screen === "settings") content = <GoalSettingsScreen tracker={tracker} onBack={toCounter} />;
+  else if (screen === "settings") content = <GoalSettingsScreen key={tracker.active} tracker={tracker} onBack={toCounter} />;
   else
     content = (
       <CounterScreen

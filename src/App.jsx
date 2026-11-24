@@ -16,7 +16,7 @@ import LibraryView from "./library/LibraryView";
 import DuaDetailView from "./library/DuaDetailView";
 import MemorizeView from "./library/MemorizeView";
 import { getLibraryTheme } from "./library/theme";
-import { RECALL_TARGET, duaMoods, todayKey } from "./library/duaUtils";
+import { RECALL_TARGET, duaMoods, missingLanguageParts, todayKey } from "./library/duaUtils";
 
 const SECTION_KEY = "app-section"; // "library" | "memorize" | "istighfar"
 function loadSection() {
@@ -58,6 +58,8 @@ export default function App() {
   const [translation, setTrans]   = useState("");
   const [selectedMoods, setSelectedMoods] = useState([]);
   const [translationEn, setTranslationEn] = useState("");
+  const [titleHi, setTitleHi] = useState("");
+  const [repeat, setRepeat] = useState(1);
   const [source, setSource] = useState("");
   // Quran verification: the verse the dua was matched to, and what the check found.
   const [quranRef, setQuranRef] = useState("");
@@ -130,7 +132,7 @@ export default function App() {
   }, [scriptMode]);
 
   /* ── Form reset ── */
-  const resetForm = () => { setTitle(""); setArabic(""); setTranslit(""); setTrans(""); setSelectedMoods([]); setTranslationEn(""); setSource(""); setQuranRef(""); setVerseArabic(""); setQuranCheck(null); setSelectedCategory("general"); setScreenshot(null); setExtractError(null); setExtracting(false); setAddMode("screenshot"); };
+  const resetForm = () => { setTitle(""); setArabic(""); setTranslit(""); setTrans(""); setSelectedMoods([]); setTranslationEn(""); setTitleHi(""); setRepeat(1); setSource(""); setQuranRef(""); setVerseArabic(""); setQuranCheck(null); setSelectedCategory("general"); setScreenshot(null); setExtractError(null); setExtracting(false); setAddMode("screenshot"); };
 
   /* ── Fill the form from an AI result, then check any Quran reference against the real text ── */
   const applyResult = async (result, fallbackArabic = "") => {
@@ -140,6 +142,8 @@ export default function App() {
     setTranslit(result.transliteration || "");
     setTrans(result.translation || "");
     setTranslationEn(result.translation_en || "");
+    setTitleHi(result.title_hi || "");
+    setRepeat(Math.min(1000, Math.max(1, Number(result.repeat) || 1)));
     setSource(result.source || "");
     setQuranRef("");
     setVerseArabic("");
@@ -184,6 +188,8 @@ export default function App() {
       try {
         const r = await extractDuaFromText(verse.arabic);
         if (r.title) setTitle(r.title);
+        if (r.title_hi) setTitleHi(r.title_hi);
+        if (r.repeat) setRepeat(Math.min(1000, Math.max(1, Number(r.repeat) || 1)));
         setTranslit(r.transliteration || "");
         setTrans(r.translation || "");
         if (r.category) setSelectedCategory(r.category);
@@ -242,6 +248,7 @@ export default function App() {
     if (!translit.trim() && result.transliteration) setTranslit(result.transliteration);
     if (!translation.trim() && result.translation) setTrans(result.translation);
     if (!translationEn.trim() && result.translation_en) setTranslationEn(result.translation_en);
+    if (!titleHi.trim() && result.title_hi) setTitleHi(result.title_hi);
   };
 
   /* ── Paste text extract ── */
@@ -267,6 +274,8 @@ export default function App() {
       title: title.trim() || `Dua ${duas.length + 1}`,
       arabic: arabic.trim(), transliteration: translit.trim(), translation: translation.trim(),
       translationEn: translationEn.trim(),
+      titleHi: titleHi.trim(),
+      repeat: Math.max(1, Number(repeat) || 1),
       source: source.trim(),
       quranRef: quranRef || undefined,
       quranText: verseArabic || undefined,
@@ -294,6 +303,8 @@ export default function App() {
     setTitle(d.title); setArabic(d.arabic); setTranslit(d.transliteration); setTrans(d.translation);
     setSelectedMoods(duaMoods(d));
     setTranslationEn(d.translationEn || "");
+    setTitleHi(d.titleHi || "");
+    setRepeat(Math.max(1, Number(d.repeat) || 1));
     setSource(d.source || "");
     setQuranRef(d.quranRef || "");
     setVerseArabic(d.quranText || "");
@@ -329,6 +340,27 @@ export default function App() {
     if (!confirm("Delete this dua? This cannot be undone.")) return;
     setDuas((list) => list.filter((d) => d.id !== id));
     backToLibrary();
+  };
+
+  /** Fills missing Roman Hindi titles and meanings (either language) with AI, one dua at a time. */
+  const fillMissingLanguage = async (onProgress) => {
+    const todo = duas.filter(missingLanguageParts);
+    let failed = 0;
+    for (let i = 0; i < todo.length; i++) {
+      const d = todo[i];
+      try {
+        const r = await extractDuaFromText(d.arabic);
+        updateDua(d.id, {
+          titleHi: d.titleHi || r.title_hi || "",
+          translation: (d.translation || "").trim() ? d.translation : r.translation || "",
+          translationEn: (d.translationEn || "").trim() ? d.translationEn : r.translation_en || "",
+        });
+      } catch {
+        failed++;
+      }
+      onProgress(i + 1, todo.length);
+    }
+    return { total: todo.length, failed };
   };
 
   const toggleRoutine = (dua) => updateDua(dua.id, { routine: !dua.routine });
@@ -493,6 +525,8 @@ export default function App() {
         setScriptMode={setScriptMode}
         themeMode={mode}
         setThemeMode={setMode}
+        missingLanguageCount={duas.filter(missingLanguageParts).length}
+        onFillMissingLanguage={fillMissingLanguage}
         importRef={importRef}
         handleImport={handleImport}
         onBack={leaveForm}
@@ -531,6 +565,10 @@ export default function App() {
         initialPaste={sharedText}
         translationEn={translationEn}
         setTranslationEn={setTranslationEn}
+        titleHi={titleHi}
+        setTitleHi={setTitleHi}
+        repeat={repeat}
+        setRepeat={setRepeat}
         source={source}
         setSource={setSource}
         verseArabic={verseArabic}

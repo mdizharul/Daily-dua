@@ -13,7 +13,7 @@ Today's dua, "How is your heart today?" mood filters, To learn / Learnt and
 search · a page per dua (listen, recited-today counter, daily routine, mark
 learnt, share card in 4 themes × fit / square / tall) · Memorize mode: Read, Fill
 blanks, From memory — 5 correct recalls marks a dua learnt · daily streak ·
-Day / Night appearance · tajweed markers · Arabic script & size · JSON
+Day / Night appearance · Language: Roman Hindi (default) or English for dua titles and meanings · repeat counts per dua (e.g. recite 3×) · tajweed markers · Arabic script & size · JSON
 backup export & import. One design across the app (the Dhikr look: cream, green,
 Inter + Space Grotesk) with a Night mode — colours live in `src/index.css`
 as CSS variables and are used through `src/theme/tokens.js`.
@@ -22,7 +22,7 @@ as CSS variables and are used through `src/theme/tokens.js`.
 wakeel** — track one or both, each with its own count, goal, streak and history:
 tap-to-count with daily goal ring, Undo /
 +33 / +100, Pocket mode (dark, screen stays awake, hold to exit), streak,
-weekly chart and today's sessions, choice of dhikr, Fajr or midnight day reset,
+weekly chart and today's sessions, choice of dhikr, daily goal (100 / 500 / 1k / 2k / 3k / 5k / 10k or your own) resetting at 12 am,
 vibration feedback. Its design follows `docs/design/istighfar-tracker-mockup.html`.
 
 Built with React 19 + Vite. Duas and settings are stored in the browser's

@@ -1,5 +1,6 @@
 import { C, FONT, FONT_NUM, card, iconButton } from "./theme";
-import { BUZZ_OPTIONS, FAJR_HOUR, TRACKERS, formatGoal, paceText } from "./data";
+import { useState } from "react";
+import { BUZZ_OPTIONS, MAX_GOAL, TRACKERS, formatGoal, formatNumber, paceText } from "./data";
 import DhikrSwitch from "./DhikrSwitch";
 import { BackIcon } from "./icons";
 
@@ -28,6 +29,13 @@ const Row = ({ title, hint, last, children, as = "div" }) => {
 
 export default function GoalSettingsScreen({ tracker, onBack }) {
   const { settings, updateSettings, info, enabled, setEnabled } = tracker;
+  const isPreset = info.goals.includes(settings.goal);
+  const [custom, setCustom] = useState(isPreset ? "" : String(settings.goal));
+  const applyCustom = (value) => {
+    setCustom(value);
+    const n = Math.round(Number(value));
+    if (n >= 1 && n <= MAX_GOAL) updateSettings({ goal: n });
+  };
 
   return (
     <div style={{ minHeight: "calc(100svh - var(--nav-h))", display: "flex", flexDirection: "column", gap: "16px", padding: "20px", maxWidth: "480px", margin: "0 auto", textAlign: "left" }}>
@@ -71,7 +79,10 @@ export default function GoalSettingsScreen({ tracker, onBack }) {
                 key={g}
                 type="button"
                 aria-pressed={active}
-                onClick={() => updateSettings({ goal: g })}
+                onClick={() => {
+                  setCustom("");
+                  updateSettings({ goal: g });
+                }}
                 style={{
                   height: "48px",
                   borderRadius: "14px",
@@ -89,7 +100,22 @@ export default function GoalSettingsScreen({ tracker, onBack }) {
             );
           })}
         </div>
-        <span style={{ fontSize: "13px", color: C.muted }}>{paceText(settings.goal)}</span>
+        <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: C.muted }}>
+          Or your own number
+          <input
+            type="number"
+            inputMode="numeric"
+            min="1"
+            max={MAX_GOAL}
+            placeholder="e.g. 1500"
+            value={custom}
+            onChange={(e) => applyCustom(e.target.value)}
+            style={{ flex: 1, minWidth: 0, height: "40px", borderRadius: "12px", border: `1px solid ${isPreset ? C.border : C.accent}`, background: C.card, color: C.text, padding: "0 12px", fontSize: "15px", fontFamily: FONT }}
+          />
+        </label>
+        <span style={{ fontSize: "13px", color: C.muted }}>
+          Goal: {formatNumber(settings.goal)} a day · {paceText(settings.goal)} · resets every night at 12 am
+        </span>
       </section>
 
       <section style={{ ...card, display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -138,36 +164,6 @@ export default function GoalSettingsScreen({ tracker, onBack }) {
       </section>
 
       <section style={{ ...card, padding: "4px 16px", display: "flex", flexDirection: "column" }}>
-        <Row title="Day resets at" hint={`Yesterday's count moves to History · Fajr ≈ ${FAJR_HOUR} am`}>
-          <span style={{ display: "flex", background: C.divider, borderRadius: "12px", padding: "3px", flexShrink: 0 }}>
-            {[
-              ["fajr", "Fajr"],
-              ["midnight", "Midnight"],
-            ].map(([id, label]) => (
-              <button
-                key={id}
-                type="button"
-                aria-pressed={settings.resetAt === id}
-                onClick={() => updateSettings({ resetAt: id })}
-                style={{
-                  height: "36px",
-                  padding: "0 12px",
-                  border: "none",
-                  borderRadius: "10px",
-                  background: settings.resetAt === id ? C.card : "transparent",
-                  color: C.text,
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  fontFamily: FONT,
-                  cursor: "pointer",
-                  boxShadow: settings.resetAt === id ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </span>
-        </Row>
 
         <Row as="label" title="Gentle reminder" hint="In the app after 6 pm if under 50%">
           <input

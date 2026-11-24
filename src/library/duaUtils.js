@@ -4,10 +4,36 @@ import { CATEGORY_MAP, CATEGORY_MOODS, MOOD_IDS } from "../constants";
 export const duaMoods = (dua) =>
   Array.isArray(dua.moods) && dua.moods.length ? dua.moods.filter((m) => MOOD_IDS.includes(m)) : CATEGORY_MOODS[dua.category] || [];
 
-/** Duas in the user's daily routine, and how many were recited today. */
+// ---------- language (Settings → Language: "hi" Roman Hindi / "en" English) ----------
+
+/** Dua title in the chosen language; falls back to the other one if missing. */
+export const duaTitle = (dua, lang) => (lang === "hi" ? dua.titleHi || dua.title : dua.title || dua.titleHi) || "Dua";
+
+/**
+ * Meaning in the chosen language: { text, label, fallback }.
+ * fallback = true when that language isn't added yet and the other one is shown.
+ */
+export function duaMeaning(dua, lang) {
+  const hi = (dua.translation || "").trim();
+  const en = (dua.translationEn || "").trim();
+  if (lang === "en") return en ? { text: en, label: "Meaning", fallback: false } : { text: hi, label: "Matlab", fallback: Boolean(hi) };
+  return hi ? { text: hi, label: "Matlab", fallback: false } : { text: en, label: "Meaning", fallback: Boolean(en) };
+}
+
+/** True when a dua is missing its Roman Hindi title or either meaning (AI can fill these). */
+export const missingLanguageParts = (dua) => !dua.titleHi || !(dua.translation || "").trim() || !(dua.translationEn || "").trim();
+
+// ---------- repeat counts (Hisnul Muslim style: "Recite 3×") ----------
+
+export const REPEAT_OPTIONS = [1, 3, 7, 10, 33, 100];
+export const repeatTarget = (dua) => Math.max(1, Number(dua.repeat) || 1);
+/** Recited enough times today to count as done. */
+export const doneToday = (dua, day) => (dua.recites?.[day] || 0) >= repeatTarget(dua);
+
+/** Duas in the user's daily routine, and how many were fully recited today. */
 export function routineStats(duas, day) {
   const list = duas.filter((d) => d.routine);
-  const done = list.filter((d) => (d.recites?.[day] || 0) > 0).length;
+  const done = list.filter((d) => doneToday(d, day)).length;
   return { list, total: list.length, done };
 }
 

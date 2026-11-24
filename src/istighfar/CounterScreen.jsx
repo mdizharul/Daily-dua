@@ -1,6 +1,7 @@
 import { C, FONT, FONT_NUM, iconButton, pillButton } from "./theme";
 import { formatNumber, headerDate } from "./data";
 import DhikrSwitch from "./DhikrSwitch";
+import { useLang } from "../hooks/useLang";
 import { ChartIcon, ChevronDownIcon, FlameIcon, MoonIcon, ResetIcon, SlidersIcon, TapIcon, UndoIcon } from "./icons";
 
 const RING_R = 112;
@@ -12,7 +13,9 @@ export default function CounterScreen({ tracker, onOpenSettings, onOpenHistory, 
   const count = today.count;
   const progress = Math.min(count / goal, 1);
   const pct = Math.floor((count / goal) * 100);
+  const lang = useLang();
   const dhikr = form;
+  const meaning = typeof dhikr.meaning === "string" ? dhikr.meaning : dhikr.meaning[lang] || dhikr.meaning.en;
   const isLong = form.arabic.length > 60;
   const showReminder = settings.reminder && new Date(now).getHours() >= 18 && count < goal / 2;
 
@@ -102,7 +105,7 @@ export default function CounterScreen({ tracker, onOpenSettings, onOpenHistory, 
           >
             {dhikr.arabic}
           </span>
-          <span style={{ fontSize: "13px", color: C.muted, marginTop: "4px" }}>{dhikr.meaning}</span>
+          <span style={{ fontSize: "13px", color: C.muted, marginTop: "4px" }}>{meaning}</span>
         </span>
         <ChevronDownIcon stroke={C.muted} />
       </button>

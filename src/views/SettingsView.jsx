@@ -2,6 +2,8 @@ import { saveTajweedMode, saveFontSize, saveDuas } from "../services/storage";
 import { TAJWEED_LEGEND } from "../utils/tajweed";
 import { T, FONT, card, column, h1, h2, iconButton, page, secondaryButton, segOption, segTrack } from "../theme/tokens";
 import { BackIcon } from "../library/icons";
+import { useState } from "react";
+import { LANGS, setLang, useLang } from "../hooks/useLang";
 
 const Row = ({ title, hint, children, last }) => (
   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", padding: "12px 0", borderBottom: last ? "none" : `1px solid ${T.divider}` }}>
@@ -29,9 +31,20 @@ const Switch = ({ on, onChange, label }) => (
 export default function SettingsView({
   duas, setDuas, tajweedMode, setTajweedMode,
   arabicFontSize, setArabicFontSize, scriptMode, setScriptMode,
-  themeMode, setThemeMode,
+  themeMode, setThemeMode, missingLanguageCount = 0, onFillMissingLanguage,
   importRef, handleImport, onBack,
 }) {
+  const lang = useLang();
+  const [filling, setFilling] = useState(null); // { done, total } while running
+  const [fillResult, setFillResult] = useState("");
+  const fillMissing = async () => {
+    setFillResult("");
+    setFilling({ done: 0, total: missingLanguageCount });
+    const { total, failed } = await onFillMissingLanguage((done, all) => setFilling({ done, total: all }));
+    setFilling(null);
+    setFillResult(failed ? `Filled ${total - failed} of ${total}. ${failed} couldn't be done — try again later.` : `Done — ${total} ${total === 1 ? "dua" : "duas"} updated.`);
+  };
+
   const exportBackup = () => {
     const blob = new Blob([JSON.stringify(duas, null, 2)], { type: "application/json" });
     const a = document.createElement("a");
@@ -62,6 +75,39 @@ export default function SettingsView({
               </button>
             ))}
           </div>
+        </section>
+
+        <section style={{ ...card, display: "flex", flexDirection: "column", gap: "12px" }}>
+          <h2 style={h2}>Language</h2>
+          <span style={{ fontSize: "13px", color: T.muted, marginTop: "-6px" }}>For dua titles and meanings. Buttons stay in English.</span>
+          <div role="radiogroup" aria-label="Language" style={segTrack(2)}>
+            {LANGS.map(([id, text]) => (
+              <button key={id} type="button" role="radio" aria-checked={lang === id} onClick={() => setLang(id)} style={segOption(lang === id)}>
+                {text}
+              </button>
+            ))}
+          </div>
+          {(missingLanguageCount > 0 || filling || fillResult) && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", padding: "12px", borderRadius: "14px", background: T.accentTint, fontSize: "13px" }}>
+              {missingLanguageCount > 0 && !filling && (
+                <span>
+                  {missingLanguageCount} {missingLanguageCount === 1 ? "dua is" : "duas are"} missing a Roman Hindi title or a meaning in one of the languages.
+                </span>
+              )}
+              {filling ? (
+                <span role="status">
+                  Filling {filling.done} of {filling.total}…
+                </span>
+              ) : (
+                missingLanguageCount > 0 && (
+                  <button type="button" onClick={fillMissing} style={{ ...secondaryButton, height: "40px" }}>
+                    ✨ Fill missing with AI
+                  </button>
+                )
+              )}
+              {fillResult && <span role="status" style={{ color: T.accent, fontWeight: 600 }}>{fillResult}</span>}
+            </div>
+          )}
         </section>
 
         <section style={{ ...card, display: "flex", flexDirection: "column", gap: "12px" }}>

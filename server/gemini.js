@@ -12,11 +12,13 @@ const CATEGORY_IDS = "daily, protection, health, rizq, sleep, travel, meals, mor
 const MOOD_IDS = "anxious, sad, grateful, forgive, unwell, need, sleep, travel, morning, evening";
 
 const OUTPUT_FIELDS = `- "title": short descriptive title in English (e.g. "Dua Before Sleeping")
+- "title_hi": the same title in Roman Hindi (e.g. "Sone se pehle ki dua")
+- "repeat": how many times this dua is traditionally recited each time (e.g. 3 for many morning/evening adhkar, 1 if not specified or unsure)
 - "category": classify the dua into ONE of these categories: ${CATEGORY_IDS}
 - "moods": array of 1 to 3 situations or feelings this dua is for, chosen ONLY from: ${MOOD_IDS} (e.g. ["anxious"] for a dua against worry, ["forgive"] for istighfar)
 - "arabic": the dua in Arabic with COMPLETE, correct tashkeel on every letter — fatha, kasra, damma, sukoon, shadda, tanween, maddah (آ / ~), dagger alif (ٰ) and hamza. Keep the same words and word order as the source. If the source text has missing or partial diacritics, ADD the correct full tashkeel — never return bare, undiacritized Arabic. For Quran verses and well-known duas, use the standard authentic wording with full diacritics. Use \\n to separate lines.
-- "transliteration": COMPLETE Roman Urdu transliteration of EVERY Arabic word. Same number of \\n breaks as arabic. Never skip or truncate any word. Use phonetics like aa, ee, oo, kh, gh.
-- "translation": Roman Urdu meaning. Same number of \\n breaks as arabic.
+- "transliteration": COMPLETE Roman Hindi transliteration of EVERY Arabic word. Same number of \\n breaks as arabic. Never skip or truncate any word. Use phonetics like aa, ee, oo, kh, gh.
+- "translation": Roman Hindi meaning. Same number of \\n breaks as arabic.
 - "translation_en": English meaning in simple, clear English. Same number of \\n breaks as arabic.
 - "quran_ref": if the Arabic is (part of) a Quran verse, its reference as "surah:ayah" or "surah:ayah-ayah" with numbers only (e.g. "20:114", "2:285-286"); otherwise null. Only give it if you are certain.
 - "source": where the dua comes from, if you are certain — e.g. "Quran 20:114", "Sahih al-Bukhari", "Sunan Abi Dawud", "Hisn al-Muslim". If you are not certain, return an empty string. Never guess or invent a reference or hadith number.`;
@@ -26,7 +28,7 @@ const STRICT_RULES = `STRICT RULES:
 - Include ONLY the dua itself. Leave out everything around it: headings, captions, labels, watermarks, page or channel names, hashtags, and add-on phrases such as "صدقة جارية" / "Sadqa Jariya", "share", "Ameen", "Subhan Allah" stickers or "copy" notes
 - Every Arabic letter must carry its vowel mark (tashkeel); a letter with shadda carries both shadda and its vowel
 - transliteration must cover every single Arabic word — NEVER cut short
-- Translation MUST be in Roman Urdu (not English, not Urdu script)
+- "translation" MUST be in Roman Hindi written in Latin letters (not English, not Devanagari, not Urdu script)
 - category MUST be one of: ${CATEGORY_IDS}`;
 
 const IMAGE_PROMPT = `You are an Islamic scholar and Arabic linguist. Analyze this image carefully.

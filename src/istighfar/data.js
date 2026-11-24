@@ -2,7 +2,7 @@
 //
 // Stored in localStorage under "istighfar-tracker":
 // {
-//   settings: { resetAt, reminder, strongBuzzEvery, enabled: ["istighfar", ...], active },
+//   settings: { resetAt: "midnight", reminder, strongBuzzEvery, enabled: ["istighfar", ...], active },
 //   trackers: {
 //     istighfar:   { goal, form, days: { "YYYY-MM-DD": { count, sessions: [{ start, end, count }] } },
 //                    round: { key, base, at, last } },   // tasbih-style Reset: today's count at reset
@@ -14,6 +14,10 @@
 export const STORAGE_KEY = "istighfar-tracker";
 
 export const BUZZ_OPTIONS = [33, 100, 500];
+
+// Daily goal choices (any other number can be typed in Goal & settings).
+export const GOAL_OPTIONS = [100, 500, 1000, 2000, 3000, 5000, 10000];
+export const MAX_GOAL = 100000;
 
 // Fajr time varies by location and season; the day rollover uses a fixed 5 am.
 export const FAJR_HOUR = 5;
@@ -28,7 +32,7 @@ const COUNTS_PER_MINUTE = 50;
 export const TRACKERS = {
   istighfar: {
     label: "Istighfar",
-    goals: [1000, 3000, 5000, 10000],
+    goals: GOAL_OPTIONS,
     defaultGoal: 10000,
     defaultForm: "short",
     forms: {
@@ -36,13 +40,19 @@ export const TRACKERS = {
         label: "Astaghfirullah",
         hint: "Short form — fastest to count",
         arabic: "أَسْتَغْفِرُ ٱللَّٰهَ",
-        meaning: "Astaghfirullah · I seek Allah's forgiveness",
+        meaning: {
+          hi: "Astaghfirullah · Main Allah se maafi maangta hoon",
+          en: "Astaghfirullah · I seek Allah's forgiveness",
+        },
       },
       tawbah: {
         label: "Astaghfirullah wa atubu ilayh",
         hint: "With tawbah",
         arabic: "أَسْتَغْفِرُ ٱللَّٰهَ وَأَتُوبُ إِلَيْهِ",
-        meaning: "I seek Allah's forgiveness and turn to Him in repentance",
+        meaning: {
+          hi: "Main Allah se maafi maangta hoon aur usi ki taraf tauba karta hoon",
+          en: "I seek Allah's forgiveness and turn to Him in repentance",
+        },
       },
       sayyid: {
         label: "Sayyidul Istighfar",
@@ -54,13 +64,16 @@ export const TRACKERS = {
           "أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ وَأَبُوءُ لَكَ بِذَنْبِي",
           "فَاغْفِرْ لِي فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ",
         ].join("\n"),
-        meaning: "Sayyidul Istighfar · the master of seeking forgiveness",
+        meaning: {
+          hi: "Sayyidul Istighfar · maafi maangne ki sabse behtareen dua",
+          en: "Sayyidul Istighfar · the master of seeking forgiveness",
+        },
       },
     },
   },
   hasbunallah: {
     label: "Hasbunallah",
-    goals: [100, 500, 1000, 3000],
+    goals: GOAL_OPTIONS,
     defaultGoal: 500,
     defaultForm: "short",
     forms: {
@@ -68,14 +81,20 @@ export const TRACKERS = {
         label: "Hasbunallahu wa ni'mal wakeel",
         hint: "Surah Aal-e-Imran 3:173",
         arabic: "حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ",
-        // Hindi meaning as given in docs/design/hasbunallah-reference.webp
-        meaning: "अल्लाह हमारे लिए काफी है, और वही सबसे अच्छा कारसाज़ (मामलों का सुलझाने वाला) है।",
+        // Roman Hindi of the Hindi meaning in docs/design/hasbunallah-reference.webp
+        meaning: {
+          hi: "Allah hamare liye kaafi hai, aur wahi sabse achha kaarsaaz (maamlon ko sulajhane wala) hai.",
+          en: "Allah is sufficient for us, and He is the best Disposer of affairs.",
+        },
       },
       full: {
         label: "…ni'mal mawla wa ni'man naseer",
         hint: "With “the best Protector, the best Helper”",
         arabic: "حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ\nنِعْمَ الْمَوْلَىٰ وَنِعْمَ النَّصِيرُ",
-        meaning: "अल्लाह हमारे लिए काफी है, और वही सबसे अच्छा कारसाज़ है — वही सबसे अच्छा मौला और सबसे अच्छा मददगार है।",
+        meaning: {
+          hi: "Allah hamare liye kaafi hai, aur wahi sabse achha kaarsaaz hai — wahi sabse achha Maula aur sabse achha Madadgaar hai.",
+          en: "Allah is sufficient for us, the best Disposer of affairs — the best Protector and the best Helper.",
+        },
       },
     },
   },
@@ -84,7 +103,7 @@ export const TRACKERS = {
 export const TRACKER_IDS = Object.keys(TRACKERS);
 
 export const DEFAULT_SETTINGS = {
-  resetAt: "fajr", // "fajr" | "midnight"
+  resetAt: "midnight", // the day's count resets at 12 am
   reminder: true,
   strongBuzzEvery: 100,
   enabled: [...TRACKER_IDS],
@@ -116,7 +135,7 @@ function normalize(parsed) {
 
   return {
     settings: {
-      resetAt: s.resetAt || DEFAULT_SETTINGS.resetAt,
+      resetAt: "midnight", // older saves may say "fajr"; the count now always resets at 12 am
       reminder: s.reminder ?? DEFAULT_SETTINGS.reminder,
       strongBuzzEvery: s.strongBuzzEvery || DEFAULT_SETTINGS.strongBuzzEvery,
       enabled: safeEnabled,

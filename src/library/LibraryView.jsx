@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { MOODS } from "../constants";
 import { FONT_SERIF, chip, column, iconBtn, page } from "./theme";
-import { categoryLabel, duaMoods, headerDate, isLearnt, routineStats, splitLines, todayKey, todaysDua } from "./duaUtils";
+import { categoryLabel, doneToday, duaMeaning, duaMoods, duaTitle, headerDate, isLearnt, repeatTarget, routineStats, splitLines, todayKey, todaysDua } from "./duaUtils";
+import { useLang } from "../hooks/useLang";
 import { FlameIcon, GearIcon, PlusIcon, SearchIcon, StarPattern } from "./icons";
 
 /**
@@ -12,6 +13,7 @@ import { FlameIcon, GearIcon, PlusIcon, SearchIcon, StarPattern } from "./icons"
 export default function LibraryView({ L, duas, filters, setFilters, streak, onOpen, onAdd, onSettings }) {
   const { tab, mood, routineOnly, search, searchOpen } = filters;
   const set = (patch) => setFilters({ ...filters, ...patch });
+  const lang = useLang();
 
   const day = todayKey();
   const routine = routineStats(duas, day);
@@ -30,7 +32,7 @@ export default function LibraryView({ L, duas, filters, setFilters, streak, onOp
   const q = search.trim().toLowerCase();
   const visible = source
     .filter((d) => mood === "all" || duaMoods(d).includes(mood))
-    .filter((d) => !q || [d.title, d.transliteration, d.translation, d.arabic].some((f) => (f || "").toLowerCase().includes(q)));
+    .filter((d) => !q || [d.title, d.titleHi, d.transliteration, d.translation, d.translationEn, d.arabic].some((f) => (f || "").toLowerCase().includes(q)));
 
   const heading = routineOnly ? "Today's routine" : tab === "learnt" ? "Learnt duas" : "My duas";
 
@@ -115,7 +117,7 @@ export default function LibraryView({ L, duas, filters, setFilters, streak, onOp
             <StarPattern color={L.gold} />
             <span style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", width: "100%" }}>
               <span style={{ fontSize: "12px", fontWeight: 600, letterSpacing: "1.2px", textTransform: "uppercase", color: L.gold }}>Today's dua</span>
-              <span style={{ fontSize: "12px", color: L.heroMuted, textAlign: "right" }}>{featured.title}</span>
+              <span style={{ fontSize: "12px", color: L.heroMuted, textAlign: "right" }}>{duaTitle(featured, lang)}</span>
             </span>
             <span
               lang="ar"
@@ -124,9 +126,9 @@ export default function LibraryView({ L, duas, filters, setFilters, streak, onOp
             >
               {splitLines(featured.arabic).join(" ")}
             </span>
-            {featured.translation && (
+            {duaMeaning(featured, lang).text && (
               <span style={{ position: "relative", fontSize: "13px", lineHeight: 1.5, color: L.heroMuted, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                {splitLines(featured.translation).join(" ")}
+                {splitLines(duaMeaning(featured, lang).text).join(" ")}
               </span>
             )}
           </button>
@@ -184,7 +186,8 @@ export default function LibraryView({ L, duas, filters, setFilters, streak, onOp
           </div>
 
           {visible.map((dua) => {
-            const recited = (dua.recites?.[day] || 0) > 0;
+            const recited = doneToday(dua, day);
+            const count = dua.recites?.[day] || 0;
             return (
               <button
                 key={dua.id}
@@ -193,9 +196,9 @@ export default function LibraryView({ L, duas, filters, setFilters, streak, onOp
                 style={{ display: "flex", flexDirection: "column", gap: "4px", background: L.card, border: `1px solid ${L.border}`, borderRadius: "20px", padding: "12px 16px", textAlign: "left", color: L.text, cursor: "pointer", fontFamily: "var(--font-ui)", width: "100%" }}
               >
                 <span style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", width: "100%" }}>
-                  <span style={{ fontSize: "14px", fontWeight: 600, lineHeight: 1.35, overflowWrap: "anywhere" }}>{dua.title}</span>
+                  <span style={{ fontSize: "14px", fontWeight: 600, lineHeight: 1.35, overflowWrap: "anywhere" }}>{duaTitle(dua, lang)}</span>
                   <span style={{ flexShrink: 0, fontSize: "11px", fontWeight: 600, color: isLearnt(dua) || (routineOnly && recited) ? L.green : L.tagText, background: isLearnt(dua) || (routineOnly && recited) ? L.greenBg : L.tagBg, padding: "3px 8px", borderRadius: "999px" }}>
-                    {routineOnly ? (recited ? "✓ Recited" : "Not yet") : isLearnt(dua) ? "Learnt" : categoryLabel(dua)}
+                    {routineOnly ? (recited ? "✓ Recited" : count > 0 ? `${count} / ${repeatTarget(dua)}` : "Not yet") : isLearnt(dua) ? "Learnt" : categoryLabel(dua)}
                   </span>
                 </span>
                 <span
@@ -211,9 +214,9 @@ export default function LibraryView({ L, duas, filters, setFilters, streak, onOp
                     {dua.verified && <span style={{ color: L.green, fontWeight: 600 }}> ✓</span>}
                   </span>
                 ) : (
-                  dua.translation && (
+                  duaMeaning(dua, lang).text && (
                     <span style={{ fontSize: "12px", color: L.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", width: "100%" }}>
-                      {splitLines(dua.translation)[0]}
+                      {splitLines(duaMeaning(dua, lang).text)[0]}
                     </span>
                   )
                 )}

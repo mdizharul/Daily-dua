@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { CATEGORIES, MOODS } from "../constants";
 import { T, FONT, card, chip, column, h1, iconButton, input, label, page, primaryButton, secondaryButton, segOption, segTrack } from "../theme/tokens";
 import { BackIcon } from "../library/icons";
-import { needsHarakat } from "../library/duaUtils";
+import { REPEAT_OPTIONS, needsHarakat } from "../library/duaUtils";
 import { matchesVerse } from "../services/quran";
 
 const Spinner = ({ size = 16 }) => (
@@ -46,6 +46,7 @@ export default function AddEditView({
   fileRef, handleScreenshot, handlePasteExtract, handleSave, onAddHarakat,
   translationEn = "", setTranslationEn, source = "", setSource,
   verseArabic = "", quranCheck, handleQuranLookup, initialPaste = "",
+  titleHi = "", setTitleHi, repeat = 1, setRepeat,
   onBack,
 }) {
   const [pasteText, setPasteText] = useState(initialPaste);
@@ -244,8 +245,12 @@ export default function AddEditView({
 
         <section style={{ ...card, display: "flex", flexDirection: "column", gap: "14px" }}>
           <div>
-            <label style={label} htmlFor="dua-title">Title</label>
+            <label style={label} htmlFor="dua-title">Title — English</label>
             <input id="dua-title" type="text" placeholder="e.g. Dua before sleeping" value={title} onChange={(e) => setTitle(e.target.value)} style={input} />
+          </div>
+          <div>
+            <label style={label} htmlFor="dua-title-hi">Title — Roman Hindi</label>
+            <input id="dua-title-hi" type="text" placeholder="e.g. Sone se pehle ki dua" value={titleHi} onChange={(e) => setTitleHi(e.target.value)} style={input} />
           </div>
           <div>
             <label style={label} htmlFor="dua-arabic">Arabic</label>
@@ -272,11 +277,11 @@ export default function AddEditView({
             <textarea id="dua-translit" rows={3} placeholder="Bismillahir Rahmanir Raheem" value={translit} onChange={(e) => setTranslit(e.target.value)} style={{ ...input, fontStyle: "italic" }} />
           </div>
           <div>
-            <label style={label} htmlFor="dua-meaning">Meaning (Matlab)</label>
+            <label style={label} htmlFor="dua-meaning">Meaning — Roman Hindi (Matlab)</label>
             <textarea id="dua-meaning" rows={3} placeholder="Allah ke naam se…" value={translation} onChange={(e) => setTrans(e.target.value)} style={input} />
           </div>
           <div>
-            <label style={label} htmlFor="dua-english">English meaning</label>
+            <label style={label} htmlFor="dua-english">Meaning — English</label>
             <textarea id="dua-english" rows={3} placeholder="In the name of Allah…" value={translationEn} onChange={(e) => setTranslationEn(e.target.value)} style={input} />
           </div>
           <div>
@@ -305,6 +310,18 @@ export default function AddEditView({
             ))}
           </div>
           <span style={{ fontSize: "12px", color: T.muted, fontFamily: FONT }}>AI picks one for you — change it if needed</span>
+        </section>
+
+        <section style={{ ...card, display: "flex", flexDirection: "column", gap: "10px" }}>
+          <span style={{ ...label, marginBottom: 0 }}>Recite how many times?</span>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            {REPEAT_OPTIONS.map((n) => (
+              <button key={n} type="button" aria-pressed={repeat === n} onClick={() => setRepeat(n)} style={chip(repeat === n)}>
+                {n}×
+              </button>
+            ))}
+          </div>
+          <span style={{ fontSize: "12px", color: T.muted, fontFamily: FONT }}>Like Hisnul Muslim — e.g. many morning and evening adhkar are recited 3×. Counts toward “Today's routine”.</span>
         </section>
 
         <section style={{ ...card, display: "flex", flexDirection: "column", gap: "10px" }}>

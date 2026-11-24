@@ -17,6 +17,8 @@ export const CARD_SIZES = {
   tall: { label: "Tall · status", w: 540, h: 960 },
 };
 
+import { duaMeaning, duaTitle } from "../library/duaUtils";
+
 const PAD = 44;
 const FOOTER = 44;
 
@@ -51,7 +53,7 @@ function layout(dua, W, s, arabicFont, arabicScale, theme, show) {
   const gap = (h) => rows.push({ gap: true, h });
   const label = (text) => rows.push({ text: text.toUpperCase().split("").join(String.fromCharCode(8202)), font: `600 ${10 * s}px 'Inter', sans-serif`, color: theme.gold, h: 22 * s });
 
-  add([dua.title || ""], `600 ${15 * s}px 'Inter', sans-serif`, theme.gold, 22 * s);
+  add([duaTitle(dua, show.lang)], `600 ${15 * s}px 'Inter', sans-serif`, theme.gold, 22 * s);
   gap(18 * s);
   add(split(dua.arabic), `700 ${28 * s * arabicScale}px ${arabicFont}`, theme.text, 50 * s * arabicScale, "rtl");
   const translit = show.translit === false ? [] : split(dua.transliteration);
@@ -60,17 +62,12 @@ function layout(dua, W, s, arabicFont, arabicScale, theme, show) {
     label("Transliteration");
     add(translit, `italic ${14 * s}px 'Inter', sans-serif`, theme.text, 22 * s);
   }
-  const meaning = show.matlab === false ? "" : split(dua.translation).join(" ");
+  const m = duaMeaning(dua, show.lang);
+  const meaning = show.meaning === false ? "" : split(m.text).join(" ");
   if (meaning) {
     gap(16 * s);
-    label("Matlab");
+    label(m.label);
     add([meaning], `500 ${14 * s}px 'Inter', sans-serif`, theme.muted, 22 * s);
-  }
-  const english = show.english ? split(dua.translationEn).join(" ") : "";
-  if (english) {
-    gap(16 * s);
-    label("English");
-    add([english], `400 ${13 * s}px 'Inter', sans-serif`, theme.muted, 21 * s);
   }
   if (dua.source) {
     gap(14 * s);

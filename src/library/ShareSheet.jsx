@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { T, FONT, h2, primaryButton, secondaryButton, segOption, segTrack } from "../theme/tokens";
 import { CARD_SIZES, CARD_THEMES, renderDuaImage, saveImage, shareImage } from "../utils/shareAsImage";
 import { useBackHandler } from "../hooks/useBackHandler";
+import { duaTitle } from "./duaUtils";
 
 const STYLE_KEY = "share-card-style";
 
@@ -21,6 +22,7 @@ export default function ShareSheet({ dua, show, night, onClose }) {
   const [blob, setBlob] = useState(null);
   const [url, setUrl] = useState(null);
   const [status, setStatus] = useState("");
+  const title = duaTitle(dua, show?.lang);
   useBackHandler(true, onClose);
 
   // Build on the latest choice, so quick taps (theme then size) don't undo each other.
@@ -59,13 +61,13 @@ export default function ShareSheet({ dua, show, night, onClose }) {
   }, [onClose]);
 
   const share = async () => {
-    const result = await shareImage(blob, dua.title);
+    const result = await shareImage(blob, title);
     if (result === "saved") setStatus("Image saved to your downloads");
     else if (result === "shared") onClose();
   };
 
   const save = () => {
-    saveImage(blob, dua.title);
+    saveImage(blob, title);
     setStatus("Image saved to your downloads");
   };
 
@@ -97,7 +99,7 @@ export default function ShareSheet({ dua, show, night, onClose }) {
           {url ? (
             <img
               src={url}
-              alt={`Share card for ${dua.title}`}
+              alt={`Share card for ${title}`}
               style={{ display: "block", width: style.size === "tall" ? "60%" : "100%", maxHeight: "46svh", objectFit: "contain", borderRadius: "12px", boxShadow: T.shadow }}
             />
           ) : (

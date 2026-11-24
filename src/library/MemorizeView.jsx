@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FONT_SERIF, column, iconBtn, page } from "./theme";
-import { RECALL_TARGET, categoryLabel, isLearnt, splitLines } from "./duaUtils";
+import { RECALL_TARGET, categoryLabel, duaMeaning, duaTitle, isLearnt, splitLines } from "./duaUtils";
+import { useLang } from "../hooks/useLang";
 import { BackIcon } from "./icons";
 
 const MODES = [
@@ -36,6 +37,7 @@ export default function MemorizeView({ L, duas, focusId, onResult, onBack, onLib
   const [index, setIndex] = useState(0);
   const [tally, setTally] = useState({ right: 0, practice: 0 });
   const [justLearnt, setJustLearnt] = useState(null);
+  const lang = useLang();
 
   const setMode = (m) => {
     setModeState(m);
@@ -51,7 +53,7 @@ export default function MemorizeView({ L, duas, focusId, onResult, onBack, onLib
 
   const answer = (correct) => {
     const recall = dua.recall || 0;
-    setJustLearnt(correct && !isLearnt(dua) && recall + 1 >= RECALL_TARGET ? dua.title : null);
+    setJustLearnt(correct && !isLearnt(dua) && recall + 1 >= RECALL_TARGET ? duaTitle(dua, lang) : null);
     onResult(dua.id, correct);
     setTally((t) => (correct ? { ...t, right: t.right + 1 } : { ...t, practice: t.practice + 1 }));
     setIndex((i) => i + 1);
@@ -77,7 +79,7 @@ export default function MemorizeView({ L, duas, focusId, onResult, onBack, onLib
             <h1 style={{ margin: 0, fontFamily: FONT_SERIF, fontSize: "28px", fontWeight: 700, letterSpacing: "-0.5px", color: L.text }}>Memorize</h1>
             {dua && (
               <span style={{ fontSize: "12px", color: L.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {dua.title} · {categoryLabel(dua)}
+                {duaTitle(dua, lang)} · {categoryLabel(dua)}
               </span>
             )}
           </div>
@@ -115,10 +117,10 @@ export default function MemorizeView({ L, duas, focusId, onResult, onBack, onLib
             {/* Keyed so peeked words reset for each dua and mode */}
             <Practice key={`${dua.id}-${mode}`} L={L} dua={dua} mode={mode} />
 
-            {dua.translation && (
+            {duaMeaning(dua, lang).text && (
               <section style={{ background: L.card, border: `1px solid ${L.border}`, borderRadius: "20px", padding: "14px 16px", display: "flex", flexDirection: "column", gap: "6px" }}>
-                <span style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "1.2px", textTransform: "uppercase", color: L.tagText }}>Matlab</span>
-                <p style={{ margin: 0, fontFamily: "var(--font-ui)", fontWeight: 500, fontSize: "16px", lineHeight: 1.45, color: L.text }}>“{splitLines(dua.translation).join(" ")}”</p>
+                <span style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "1.2px", textTransform: "uppercase", color: L.tagText }}>{duaMeaning(dua, lang).label}</span>
+                <p style={{ margin: 0, fontFamily: "var(--font-ui)", fontWeight: 500, fontSize: "16px", lineHeight: 1.45, color: L.text }}>“{splitLines(duaMeaning(dua, lang).text).join(" ")}”</p>
               </section>
             )}
 
@@ -153,6 +155,7 @@ export default function MemorizeView({ L, duas, focusId, onResult, onBack, onLib
 
 /** The navy practice card: full text, every other word hidden, or everything hidden. */
 function Practice({ L, dua, mode }) {
+  const lang = useLang();
   const [peeked, setPeeked] = useState(() => new Set());
   const [showAll, setShowAll] = useState(false);
   const peek = (key) => setPeeked((s) => new Set(s).add(key));
@@ -170,7 +173,7 @@ function Practice({ L, dua, mode }) {
   if (mode === "memory" && !showAll) {
     return (
       <section style={box}>
-        <p style={{ margin: 0, fontFamily: FONT_SERIF, fontWeight: 600, fontSize: "20px", lineHeight: 1.3 }}>Recite “{dua.title}” from memory</p>
+        <p style={{ margin: 0, fontFamily: FONT_SERIF, fontWeight: 600, fontSize: "20px", lineHeight: 1.3 }}>Recite “{duaTitle(dua, lang)}” from memory</p>
         <p style={{ margin: 0, fontSize: "13px", color: L.heroMuted }}>Use the meaning below as your cue. Then check yourself.</p>
         <button type="button" onClick={() => setShowAll(true)} style={{ height: "44px", padding: "0 18px", borderRadius: "999px", border: `1px dashed ${L.gold}`, background: "rgba(232,201,126,0.14)", color: L.heroText, fontSize: "14px", fontWeight: 600, fontFamily: "var(--font-ui)", cursor: "pointer" }}>
           Show the dua
