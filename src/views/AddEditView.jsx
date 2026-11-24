@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { CATEGORIES, MOODS } from "../constants";
 import { T, FONT, card, chip, column, h1, iconButton, input, label, page, primaryButton, secondaryButton, segOption, segTrack } from "../theme/tokens";
 import { BackIcon } from "../library/icons";
-import { REPEAT_OPTIONS, needsHarakat } from "../library/duaUtils";
+import { MAX_REPEAT, REPEAT_OPTIONS, needsHarakat } from "../library/duaUtils";
 import { matchesVerse } from "../services/quran";
 
 const Spinner = ({ size = 16 }) => (
@@ -51,6 +51,13 @@ export default function AddEditView({
 }) {
   const [pasteText, setPasteText] = useState(initialPaste);
   const [refText, setRefText] = useState("");
+  // Own repeat count (any number); empty while a preset chip is chosen.
+  const [customRepeat, setCustomRepeat] = useState(REPEAT_OPTIONS.includes(repeat) ? "" : String(repeat));
+  const applyCustomRepeat = (value) => {
+    setCustomRepeat(value);
+    const n = Math.round(Number(value));
+    if (n >= 1 && n <= MAX_REPEAT) setRepeat(n);
+  };
   const [fixing, setFixing] = useState(false);
   const [fixError, setFixError] = useState("");
 
@@ -316,11 +323,24 @@ export default function AddEditView({
           <span style={{ ...label, marginBottom: 0 }}>Recite how many times?</span>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
             {REPEAT_OPTIONS.map((n) => (
-              <button key={n} type="button" aria-pressed={repeat === n} onClick={() => setRepeat(n)} style={chip(repeat === n)}>
+              <button key={n} type="button" aria-pressed={repeat === n && !customRepeat} onClick={() => { setCustomRepeat(""); setRepeat(n); }} style={chip(repeat === n && !customRepeat)}>
                 {n}×
               </button>
             ))}
           </div>
+          <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: T.muted }}>
+            Or your own number
+            <input
+              type="number"
+              inputMode="numeric"
+              min="1"
+              max={MAX_REPEAT}
+              placeholder="e.g. 41"
+              value={customRepeat}
+              onChange={(e) => applyCustomRepeat(e.target.value)}
+              style={{ ...input, flex: 1, minWidth: 0, height: "40px", padding: "0 12px", borderColor: customRepeat ? "var(--accent)" : undefined }}
+            />
+          </label>
           <span style={{ fontSize: "12px", color: T.muted, fontFamily: FONT }}>Like Hisnul Muslim — e.g. many morning and evening adhkar are recited 3×. Counts toward “Today's routine”.</span>
         </section>
 

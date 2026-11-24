@@ -26,6 +26,8 @@ export const missingLanguageParts = (dua) => !dua.titleHi || !(dua.translation |
 // ---------- repeat counts (Hisnul Muslim style: "Recite 3×") ----------
 
 export const REPEAT_OPTIONS = [1, 3, 7, 10, 33, 100];
+/** Highest repeat count a user can type (same limit as the Dhikr goal). Counting itself never stops. */
+export const MAX_REPEAT = 100000;
 export const repeatTarget = (dua) => Math.max(1, Number(dua.repeat) || 1);
 /** Recited enough times today to count as done. */
 export const doneToday = (dua, day) => (dua.recites?.[day] || 0) >= repeatTarget(dua);

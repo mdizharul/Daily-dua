@@ -16,7 +16,7 @@ import LibraryView from "./library/LibraryView";
 import DuaDetailView from "./library/DuaDetailView";
 import MemorizeView from "./library/MemorizeView";
 import { getLibraryTheme } from "./library/theme";
-import { RECALL_TARGET, duaMoods, missingLanguageParts, todayKey } from "./library/duaUtils";
+import { MAX_REPEAT, RECALL_TARGET, duaMoods, missingLanguageParts, todayKey } from "./library/duaUtils";
 
 const SECTION_KEY = "app-section"; // "library" | "memorize" | "istighfar"
 function loadSection() {
@@ -275,7 +275,7 @@ export default function App() {
       arabic: arabic.trim(), transliteration: translit.trim(), translation: translation.trim(),
       translationEn: translationEn.trim(),
       titleHi: titleHi.trim(),
-      repeat: Math.max(1, Number(repeat) || 1),
+      repeat: Math.min(MAX_REPEAT, Math.max(1, Math.round(Number(repeat)) || 1)),
       source: source.trim(),
       quranRef: quranRef || undefined,
       quranText: verseArabic || undefined,
